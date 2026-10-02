@@ -116,12 +116,12 @@ export const StoreLocation: React.FC = () => {
             {/* Storefront Visual Showcase */}
             <div className="relative aspect-[16/10] rounded-2xl overflow-hidden border border-slate-200 shadow-md bg-white group">
               <img
-                src="/src/assets/images/store_madina_boutique_1790538714988.jpg"
+                src="/images/store_madina_boutique.jpg"
                 alt="New Madina Electronics Boutique Vitrine Paradise Shopping Centre Saddar"
                 referrerPolicy="no-referrer"
                 className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                 onError={(e) => {
-                  (e.target as HTMLImageElement).src = '/src/assets/images/lifestyle_hero_edifice_1790539511747.jpg';
+                  (e.target as HTMLImageElement).src = '/images/lifestyle_hero_edifice.jpg';
                 }}
               />
               <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-transparent to-transparent pointer-events-none" />

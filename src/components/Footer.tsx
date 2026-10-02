@@ -1,11 +1,7 @@
 import React from 'react';
-import { ShieldCheck, MapPin, Phone, MessageCircle, Clock, ExternalLink, Lock } from 'lucide-react';
+import { ShieldCheck, MapPin, Phone, MessageCircle, Clock, ExternalLink } from 'lucide-react';
 
-interface FooterProps {
-  onOpenAdmin?: () => void;
-}
-
-export const Footer: React.FC<FooterProps> = ({ onOpenAdmin }) => {
+export const Footer: React.FC = () => {
   return (
     <footer className="bg-[#0a0c10] border-t border-white/10 text-slate-400 text-xs">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16 space-y-12">
@@ -111,18 +107,6 @@ export const Footer: React.FC<FooterProps> = ({ onOpenAdmin }) => {
             <a href="https://maps.app.goo.gl/mtfksLzuMSzJgqvq8" target="_blank" rel="noopener noreferrer" className="hover:text-slate-300">
               Saddar Store
             </a>
-            {onOpenAdmin && (
-              <>
-                <span>·</span>
-                <button
-                  onClick={onOpenAdmin}
-                  className="hover:text-amber-400 text-slate-400 transition-colors inline-flex items-center gap-1 cursor-pointer font-mono"
-                >
-                  <Lock className="w-3 h-3" />
-                  <span>Admin</span>
-                </button>
-              </>
-            )}
           </div>
         </div>
       </div>

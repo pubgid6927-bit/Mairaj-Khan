@@ -19,7 +19,7 @@ const SLIDES: BannerSlide[] = [
     brandTag: 'CASIO EDIFICE · SPEED & TECH',
     headline: 'High-Performance Chronographs & Precision Engineering',
     description: 'Motorsport-inspired timepieces featuring 100M water resistance, scratch-resistant crystal, and Tough Solar light energy.',
-    image: '/src/assets/images/lifestyle_hero_edifice_1790539511747.jpg',
+    image: '/images/lifestyle_hero_edifice.jpg',
     targetSeries: 'Casio Edifice'
   },
   {
@@ -28,7 +28,7 @@ const SLIDES: BannerSlide[] = [
     brandTag: 'CASIO G-SHOCK · ABSOLUTE TOUGHNESS',
     headline: 'The Unbreakable Legend & CasiOak Carbon Collection',
     description: 'From iconic octagonal GA-2100 Carbon Core Guard to heritage 1983 squares and Mudmaster extreme outdoor editions.',
-    image: '/src/assets/images/lifestyle_banner_gshock_1790539526957.jpg',
+    image: '/images/lifestyle_banner_gshock.jpg',
     targetSeries: 'Casio G-Shock'
   },
   {
@@ -37,7 +37,7 @@ const SLIDES: BannerSlide[] = [
     brandTag: 'CASIO VINTAGE · TIMELESS ICONS',
     headline: 'Original 1980s Retro Aesthetics & Modern Precision',
     description: 'Classic A168 ElectroLuminescence, gold mirror faces, Marty McFly calculators, and Casio Royale world time watches.',
-    image: '/src/assets/images/lifestyle_banner_vintage_1790539546167.jpg',
+    image: '/images/lifestyle_banner_vintage.jpg',
     targetSeries: 'Casio Vintage'
   }
 ];
@@ -137,7 +137,7 @@ export const HeroBanner: React.FC = () => {
                 referrerPolicy="no-referrer"
                 className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                 onError={(e) => {
-                  (e.target as HTMLImageElement).src = '/src/assets/images/lifestyle_hero_edifice_1790539511747.jpg';
+                  (e.target as HTMLImageElement).src = '/images/lifestyle_hero_edifice.jpg';
                 }}
               />
               <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 via-transparent to-transparent pointer-events-none" />

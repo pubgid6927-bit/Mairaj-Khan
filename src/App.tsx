@@ -64,6 +64,43 @@ const MainContent: React.FC = () => {
   const [sortBy, setSortBy] = useState('featured');
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 
+  // Direct URL route listener for Admin panel (/admin, #admin, or ?admin)
+  useEffect(() => {
+    const checkAdminRoute = () => {
+      const pathname = window.location.pathname.toLowerCase();
+      const hash = window.location.hash.toLowerCase();
+      const search = window.location.search.toLowerCase();
+
+      if (
+        pathname === '/admin' || 
+        pathname.endsWith('/admin') || 
+        pathname.includes('/admin') ||
+        hash === '#admin' || 
+        search.includes('admin')
+      ) {
+        setIsAdminOpen(true);
+      }
+    };
+
+    checkAdminRoute();
+    window.addEventListener('popstate', checkAdminRoute);
+    window.addEventListener('hashchange', checkAdminRoute);
+    return () => {
+      window.removeEventListener('popstate', checkAdminRoute);
+      window.removeEventListener('hashchange', checkAdminRoute);
+    };
+  }, []);
+
+  const handleCloseAdmin = () => {
+    setIsAdminOpen(false);
+    // Gracefully clean up URL when closing modal
+    const pathname = window.location.pathname;
+    if (pathname.includes('/admin') || window.location.hash === '#admin' || window.location.search.includes('admin')) {
+      const cleanPath = pathname.replace(/\/admin\/?$/, '') || '/';
+      window.history.pushState(null, '', cleanPath);
+    }
+  };
+
   // Sync from Supabase on mount if configured
   useEffect(() => {
     if (isSupabaseConfigured()) {
@@ -288,22 +325,12 @@ const MainContent: React.FC = () => {
       </main>
 
       {/* Footer */}
-      <Footer onOpenAdmin={() => setIsAdminOpen(true)} />
+      <Footer />
 
-      {/* Floating Discreet Store Admin Control Button */}
-      <button
-        onClick={() => setIsAdminOpen(true)}
-        className="fixed bottom-16 md:bottom-5 right-3 md:right-5 z-35 bg-slate-900/90 hover:bg-slate-950 text-white text-[11px] font-mono font-bold px-3 py-1.5 rounded-full shadow-lg border border-slate-700 backdrop-blur-xs flex items-center gap-1.5 cursor-pointer opacity-80 hover:opacity-100 transition-opacity"
-        title="Open Store Admin Control Panel"
-      >
-        <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
-        <span>Admin Panel</span>
-      </button>
-
-      {/* Admin Control Panel Modal */}
+      {/* Admin Control Panel Modal (Accessible only via /admin direct URL route) */}
       <AdminPanelModal
         isOpen={isAdminOpen}
-        onClose={() => setIsAdminOpen(false)}
+        onClose={handleCloseAdmin}
         products={allProducts}
         onProductsUpdated={handleProductsUpdated}
       />
