@@ -1,0 +1,6 @@
+{
+  "name": "New Madina Electronics",
+  "description": "Retailer of 100% Genuine Casio Watches in Karachi, Pakistan. Official 1-Year Warranty on Casio MTP, LTP, Edifice, G-Shock, Vintage, and ProTrek.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

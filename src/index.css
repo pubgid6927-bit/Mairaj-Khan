@@ -1,0 +1,17 @@
+@import "tailwindcss";
+
+/* Hide scrollbar utility for clean mobile scrolling */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Touch optimization for mobile buttons and cards */
+@layer base {
+  button, a {
+    -webkit-tap-highlight-color: transparent;
+  }
+}
