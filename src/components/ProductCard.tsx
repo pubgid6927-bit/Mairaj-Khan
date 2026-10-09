@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { WatchProduct } from '../types';
 import { useCart, formatPKR } from '../context/CartContext';
-import { Heart, ShoppingBag, ShieldCheck, Check, Star, Eye } from 'lucide-react';
+import { Heart } from 'lucide-react';
 import { WatchDialRenderer } from './WatchDialRenderer';
 
 interface ProductCardProps {
@@ -9,158 +9,95 @@ interface ProductCardProps {
 }
 
 export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
-  const { addToCart, isInWishlist, toggleWishlist, setSelectedProduct, setIsCartOpen } = useCart();
+  const { isInWishlist, toggleWishlist, setSelectedProduct } = useCart();
   const [imageError, setImageError] = useState(false);
-  const [justAdded, setJustAdded] = useState(false);
 
   const isFavorited = isInWishlist(product.id);
 
-  const handleAddToCart = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    addToCart(product, 1);
-    setJustAdded(true);
-    setIsCartOpen(true);
-    setTimeout(() => setJustAdded(false), 1600);
-  };
+  // Category display e.g. "CASIO EDIFICE", "CASIO GENERAL", "CASIO G-SHOCK"
+  const categoryTag = product.series.includes('MTP') || product.series.includes('LTP') 
+    ? 'CASIO GENERAL' 
+    : product.series.toUpperCase();
 
-  const discountAmount = product.originalPricePKR ? product.originalPricePKR - product.pricePKR : 0;
+  const discountPercent = product.originalPricePKR && product.originalPricePKR > product.pricePKR
+    ? Math.round(((product.originalPricePKR - product.pricePKR) / product.originalPricePKR) * 100)
+    : null;
 
   return (
-    <div
+    <article
       onClick={() => setSelectedProduct(product)}
-      className="group bg-white border border-slate-200 hover:border-slate-400 rounded-xl sm:rounded-2xl overflow-hidden transition-all duration-200 flex flex-col justify-between cursor-pointer shadow-2xs hover:shadow-md"
+      className="group relative flex flex-col justify-between h-full bg-white border border-neutral-200/80 hover:border-neutral-900 p-3 sm:p-5 transition-all duration-300 rounded-xs shadow-[0_1px_3px_rgba(0,0,0,0.02)] hover:shadow-[0_12px_24px_rgba(0,0,0,0.06)] cursor-pointer select-none"
     >
-      {/* Product Image Stage */}
-      <div className="relative aspect-square w-full bg-white flex items-center justify-center p-2 sm:p-4 overflow-hidden border-b border-slate-100">
+      {/* Top Action / Discount Indicators */}
+      <div className="absolute top-2.5 left-2.5 sm:top-3.5 sm:left-3.5 z-10 flex items-center gap-1.5 pointer-events-none">
+        {discountPercent && (
+          <span className="text-[9px] sm:text-[10px] font-bold tracking-wider text-rose-700 bg-rose-50 border border-rose-200/80 px-1.5 py-0.5 rounded-2xs">
+            -{discountPercent}%
+          </span>
+        )}
+      </div>
+
+      {/* Subtle Wishlist Heart Icon (Top Right) */}
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          toggleWishlist(product.id);
+        }}
+        className={`absolute top-2 right-2 sm:top-3 sm:right-3 w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-full transition-all duration-200 cursor-pointer z-10 ${
+          isFavorited
+            ? 'text-rose-600'
+            : 'text-neutral-300 hover:text-neutral-900 opacity-0 group-hover:opacity-100'
+        }`}
+        title={isFavorited ? 'Saved in Wishlist' : 'Add to Wishlist'}
+        aria-label={isFavorited ? 'Remove from wishlist' : 'Add to wishlist'}
+      >
+        <Heart className={`w-3.5 h-3.5 sm:w-4 sm:h-4 transition-transform ${isFavorited ? 'fill-rose-600 text-rose-600 scale-110 opacity-100' : ''}`} />
+      </button>
+
+      {/* 1. Pure White Centered Watch Image Stage with Equal Transparent Padding */}
+      <div className="relative aspect-square w-full bg-white flex items-center justify-center p-2 sm:p-5 mb-3 overflow-hidden">
         {!imageError ? (
           <img
             src={product.imageUrl}
-            alt={product.model}
+            alt={`${product.model} - ${product.name}`}
+            loading="lazy"
             referrerPolicy="no-referrer"
             onError={() => setImageError(true)}
-            className="w-full h-full object-contain transition-transform duration-300 group-hover:scale-105"
+            className="w-full h-full object-contain filter drop-shadow-[0_4px_12px_rgba(0,0,0,0.04)] group-hover:drop-shadow-[0_12px_20px_rgba(0,0,0,0.08)] transition-transform duration-500 ease-out group-hover:scale-105"
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center p-2">
-            <WatchDialRenderer product={product} className="w-full h-full max-h-[160px] sm:max-h-[190px]" />
+            <WatchDialRenderer product={product} className="w-full h-full max-h-[180px]" />
           </div>
         )}
+      </div>
 
-        {/* Top Left: Series Tag */}
-        <div className="absolute top-2 left-2 sm:top-2.5 sm:left-2.5 pointer-events-none">
-          <span className="text-[9px] sm:text-[10px] font-bold tracking-wider uppercase bg-slate-900/90 text-white px-1.5 sm:px-2 py-0.5 rounded shadow-2xs">
-            {product.series.replace('Casio ', '')}
+      {/* 2. Clean 3-Line Luxury Hierarchy */}
+      <div className="pt-2 border-t border-neutral-100 space-y-1 text-left">
+        {/* Line 1: Soft gray text for sub-brand / category in uppercase */}
+        <p className="text-[10px] sm:text-[11px] text-neutral-400 font-semibold tracking-[0.2em] uppercase truncate">
+          {categoryTag}
+        </p>
+
+        {/* Line 2: Clear bold text for model code & name */}
+        <h3 className="text-xs sm:text-sm text-neutral-900 font-bold group-hover:text-amber-900 transition-colors truncate">
+          <span>{product.model}</span>
+          <span className="text-neutral-300 font-light mx-1.5">·</span>
+          <span className="text-neutral-700 font-medium">{product.name}</span>
+        </h3>
+
+        {/* Line 3: Clear bold price tag (Sale price + Original strikethrough) */}
+        <div className="flex items-baseline gap-2 pt-0.5">
+          <span className="font-mono font-bold text-neutral-950 text-xs sm:text-sm">
+            {formatPKR(product.pricePKR)}
           </span>
-        </div>
-
-        {/* Top Right: Wishlist Heart with Touch Target */}
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            toggleWishlist(product.id);
-          }}
-          className={`absolute top-1.5 right-1.5 sm:top-2 sm:right-2 p-1.5 sm:p-2 min-w-[34px] min-h-[34px] sm:min-w-[38px] sm:min-h-[38px] flex items-center justify-center rounded-full transition-all duration-200 cursor-pointer active:scale-125 z-10 ${
-            isFavorited
-              ? 'bg-rose-50 text-rose-600 border border-rose-300 shadow-2xs scale-105'
-              : 'bg-white/90 text-slate-400 hover:text-rose-600 hover:bg-white border border-slate-200 shadow-2xs'
-          }`}
-          title={isFavorited ? 'Saved in wishlist' : 'Save to wishlist'}
-          aria-label={isFavorited ? 'Remove from wishlist' : 'Add to wishlist'}
-        >
-          <Heart className={`w-3.5 h-3.5 sm:w-4 sm:h-4 transition-transform ${isFavorited ? 'fill-rose-500 text-rose-500 scale-110' : ''}`} />
-        </button>
-
-        {/* Quick View Button on Desktop Hover */}
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            setSelectedProduct(product);
-          }}
-          className="hidden md:flex absolute bottom-2.5 left-1/2 -translate-x-1/2 px-3 py-1 bg-white hover:bg-slate-900 text-slate-900 hover:text-white text-xs font-semibold rounded shadow-md border border-slate-200 opacity-0 group-hover:opacity-100 transition-all items-center gap-1.5"
-        >
-          <Eye className="w-3 h-3 text-amber-600" />
-          <span>Quick View</span>
-        </button>
-      </div>
-
-      {/* Card Body */}
-      <div className="p-2.5 sm:p-4 flex flex-col flex-1 justify-between gap-1.5 sm:gap-2.5 bg-white">
-        <div className="space-y-1">
-          {/* Model Ref + Warranty Tag */}
-          <div className="flex items-center justify-between gap-1">
-            <span className="font-mono text-xs sm:text-sm font-bold text-slate-900 tracking-tight truncate">
-              {product.model}
+          {product.originalPricePKR && (
+            <span className="font-mono text-neutral-400 line-through text-[11px] sm:text-xs">
+              {formatPKR(product.originalPricePKR)}
             </span>
-            <span className="hidden sm:flex text-[9px] font-medium text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-100 items-center gap-0.5 shrink-0">
-              <ShieldCheck className="w-2.5 h-2.5" /> 1-Yr
-            </span>
-          </div>
-
-          {/* Product Name */}
-          <h3 className="text-xs sm:text-sm font-medium text-slate-700 line-clamp-1 group-hover:text-amber-800 transition-colors">
-            {product.name}
-          </h3>
-
-          {/* Clean Specs Typography */}
-          <div className="text-[10px] sm:text-[11px] text-slate-500 truncate font-normal">
-            <span>{product.specs.bandMaterial}</span>
-            <span aria-hidden="true" className="mx-1 text-slate-300">·</span>
-            <span>{product.specs.waterResistance.split(' ')[0]}</span>
-          </div>
-
-          {/* Star Rating on Desktop */}
-          <div className="hidden sm:flex items-center gap-1 text-xs pt-0.5">
-            <div className="flex items-center text-amber-500">
-              <Star className="w-3 h-3 fill-amber-400" />
-            </div>
-            <span className="font-mono text-slate-800 font-bold text-[11px]">{product.rating}</span>
-            <span className="text-slate-400 text-[10px]">({product.reviewsCount})</span>
-          </div>
-        </div>
-
-        {/* Pricing & Add to Cart Button */}
-        <div className="pt-2 border-t border-slate-100 flex items-center justify-between gap-1.5">
-          <div className="min-w-0">
-            <div className="font-mono text-xs sm:text-base font-extrabold text-slate-900 tabular-nums truncate">
-              {formatPKR(product.pricePKR)}
-            </div>
-            {product.originalPricePKR && (
-              <div className="flex items-center gap-1 truncate">
-                <span className="font-mono text-[10px] sm:text-[11px] text-slate-400 line-through tabular-nums truncate">
-                  {formatPKR(product.originalPricePKR)}
-                </span>
-                {discountAmount > 0 && (
-                  <span className="hidden sm:inline text-[9px] font-bold text-emerald-700 bg-emerald-50 px-1 rounded">
-                    Save {formatPKR(discountAmount)}
-                  </span>
-                )}
-              </div>
-            )}
-          </div>
-
-          <button
-            onClick={handleAddToCart}
-            className={`px-2.5 sm:px-3 py-1.5 sm:py-2 text-[11px] sm:text-xs font-bold rounded-lg transition-all flex items-center gap-1 cursor-pointer shrink-0 active:scale-95 shadow-2xs ${
-              justAdded
-                ? 'bg-emerald-600 text-white'
-                : 'bg-slate-900 hover:bg-slate-800 text-white'
-            }`}
-            aria-label={`Add ${product.model} to shopping bag`}
-          >
-            {justAdded ? (
-              <>
-                <Check className="w-3.5 h-3.5 text-white" />
-                <span className="hidden sm:inline">Added</span>
-              </>
-            ) : (
-              <>
-                <ShoppingBag className="w-3.5 h-3.5 text-amber-400" />
-                <span>Add</span>
-              </>
-            )}
-          </button>
+          )}
         </div>
       </div>
-    </div>
+    </article>
   );
 };

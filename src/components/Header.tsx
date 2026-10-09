@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useCart, formatPKR } from '../context/CartContext';
 import { 
   ShoppingBag, 
@@ -11,12 +11,36 @@ import {
   ShieldCheck,
   MessageCircle,
   Clock,
-  Compass
+  User,
+  ChevronDown,
+  Truck,
+  Sparkles,
+  ArrowRight,
+  Package
 } from 'lucide-react';
+import { AccountModal } from './AccountModal';
 
 export const Header: React.FC = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isAccountModalOpen, setIsAccountModalOpen] = useState(false);
+  const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
+
+  // Ticker announcement rotation
+  const [tickerIndex, setTickerIndex] = useState(0);
+  const tickerMessages = [
+    'FREE EXPRESS SHIPPING ACROSS PAKISTAN ON ORDERS ABOVE RS. 15,000',
+    '100% GENUINE CASIO TIMEPIECES WITH OFFICIAL 1-YEAR STAMPED WARRANTY',
+    'VISIT OUR SADDAR KARACHI SHOWROOM · SHOP 141, PARADISE SHOPPING CENTRE',
+    'EXPRESS CASH ON DELIVERY (COD) AVAILABLE NATIONWIDE · VERIFY BEFORE RECEIVING'
+  ];
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setTickerIndex((prev) => (prev + 1) % tickerMessages.length);
+    }, 4500);
+    return () => clearInterval(timer);
+  }, [tickerMessages.length]);
 
   const { 
     cartItemsCount, 
@@ -35,6 +59,7 @@ export const Header: React.FC = () => {
     }
     setMobileMenuOpen(false);
     setIsSearchOpen(false);
+    setActiveDropdown(null);
 
     const el = document.getElementById(sectionId);
     if (el) {
@@ -43,324 +68,438 @@ export const Header: React.FC = () => {
   };
 
   return (
-    <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200">
-      {/* Top Trust Notice Strip */}
-      <div className="bg-slate-900 text-white text-[11px] py-1.5 px-3 sm:px-8">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-2 truncate">
-            <span className="inline-block w-2 h-2 rounded-full bg-emerald-400 shrink-0" />
-            <span className="font-semibold text-slate-100 truncate">
-              Shop 141, Paradise Shopping Centre, Saddar, Karachi
-            </span>
-          </div>
+    <>
+      <header className="sticky top-0 z-40 bg-white border-b border-neutral-200/90 font-sans shadow-xs">
+        {/* Top Scrolling Info / News Ticker Bar - LifeStyle Collection Exact Signature */}
+        <div className="bg-[#111111] text-white text-[10px] sm:text-[11px] py-1.5 px-3 sm:px-8 border-b border-white/10 tracking-[0.06em]">
+          <div className="max-w-7xl mx-auto flex items-center justify-between">
+            {/* Center / Left: Rotating News Ticker */}
+            <div className="flex items-center gap-2 overflow-hidden flex-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0 animate-pulse" />
+              <div className="overflow-hidden whitespace-nowrap">
+                <span className="text-neutral-200 font-medium inline-block animate-in fade-in duration-500 key={tickerIndex}">
+                  {tickerMessages[tickerIndex]}
+                </span>
+              </div>
+            </div>
 
-          <div className="hidden sm:flex items-center gap-4 text-slate-300 shrink-0 text-[10px]">
-            <span className="flex items-center gap-1 text-slate-300">
-              <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-              100% Original Japanese Movements
-            </span>
-            <span aria-hidden="true" className="text-slate-700">·</span>
-            <span className="flex items-center gap-1">
-              <Clock className="w-3 h-3 text-amber-400" />
-              12:30 PM - 9:30 PM
-            </span>
-            <span aria-hidden="true" className="text-slate-700">·</span>
-            <a 
-              href="tel:+923213979883" 
-              className="text-white hover:text-amber-400 transition-colors font-mono font-bold"
+            {/* Right Quick Links */}
+            <div className="hidden lg:flex items-center gap-5 text-neutral-300 shrink-0 text-[10px] pl-4">
+              <button
+                onClick={() => setIsAccountModalOpen(true)}
+                className="hover:text-amber-300 transition-colors flex items-center gap-1 cursor-pointer"
+              >
+                <Package className="w-3 h-3 text-amber-400" />
+                <span>Track Order</span>
+              </button>
+              <span className="text-neutral-700">|</span>
+              <a
+                href="#store-location"
+                className="hover:text-amber-300 transition-colors flex items-center gap-1"
+              >
+                <MapPin className="w-3 h-3 text-amber-400" />
+                <span>Saddar Store</span>
+              </a>
+              <span className="text-neutral-700">|</span>
+              <a
+                href="tel:+923213979883"
+                className="hover:text-amber-300 transition-colors font-mono font-bold text-white flex items-center gap-1"
+              >
+                <Phone className="w-3 h-3 text-amber-400" />
+                <span>+92 321 3979883</span>
+              </a>
+              <span className="text-neutral-700">|</span>
+              <span className="font-mono text-amber-300 font-bold">PKR (Rs.)</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Main Header Bar */}
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-18 sm:h-22 flex items-center justify-between gap-3 sm:gap-6">
+          {/* Left: Mobile Menu + Brand Logo */}
+          <div className="flex items-center gap-3 shrink-0 min-w-0">
+            <button 
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="lg:hidden p-2 -ml-1 text-neutral-900 hover:text-black active:scale-95 transition-transform"
+              aria-label="Toggle Navigation Menu"
             >
-              +92 321 3979883
+              {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            </button>
+            
+            <a 
+              href="#" 
+              onClick={(e) => { e.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+              className="flex items-center group min-w-0"
+            >
+              <span 
+                className="text-lg sm:text-2xl lg:text-[26px] font-black tracking-tight text-neutral-950 group-hover:text-amber-800 transition-colors uppercase truncate font-serif"
+                style={{ fontFamily: "'Cinzel', serif" }}
+              >
+                New Madina Electronics
+              </span>
             </a>
           </div>
 
-          <div className="sm:hidden flex items-center gap-2 shrink-0">
-            <a 
-              href="tel:+923213979883" 
-              className="text-amber-400 font-mono font-bold hover:underline"
+          {/* Center: Desktop Navigation Bar with LifeStyle Collection Mega Dropdowns */}
+          <nav className="hidden lg:flex items-center gap-6 xl:gap-8 text-[12px] font-bold tracking-[0.12em] uppercase text-neutral-800 h-full">
+            {/* 1. MEN */}
+            <div 
+              className="relative h-full flex items-center"
+              onMouseEnter={() => setActiveDropdown('men')}
+              onMouseLeave={() => setActiveDropdown(null)}
             >
-              0321-3979883
-            </a>
+              <button 
+                onClick={() => handleNavClick('catalog-section', 'Casio MTP')}
+                className="hover:text-neutral-950 transition-colors flex items-center gap-1 py-2 cursor-pointer border-b-2 border-transparent hover:border-neutral-950"
+              >
+                <span>Men</span>
+                <ChevronDown className="w-3 h-3 text-neutral-400 group-hover:rotate-180 transition-transform" />
+              </button>
+
+              {activeDropdown === 'men' && (
+                <div className="absolute top-full left-0 w-64 bg-white border border-neutral-200 shadow-xl rounded-b p-4 space-y-2 text-xs font-medium normal-case tracking-normal animate-in fade-in-50 duration-150 z-50">
+                  <div className="font-bold text-[10px] tracking-widest uppercase text-neutral-400 pb-1 border-b border-neutral-100">
+                    Men's Casio Timepieces
+                  </div>
+                  <button 
+                    onClick={() => handleNavClick('catalog-section', 'Casio MTP')}
+                    className="w-full text-left p-1.5 hover:bg-neutral-50 hover:text-neutral-950 rounded flex justify-between"
+                  >
+                    <span>Casio MTP Series (Dress Classics)</span>
+                    <ArrowRight className="w-3.5 h-3.5 text-neutral-400" />
+                  </button>
+                  <button 
+                    onClick={() => handleNavClick('catalog-section', 'Casio Edifice')}
+                    className="w-full text-left p-1.5 hover:bg-neutral-50 hover:text-neutral-950 rounded flex justify-between"
+                  >
+                    <span>Edifice Chronographs (Motorsport)</span>
+                    <ArrowRight className="w-3.5 h-3.5 text-neutral-400" />
+                  </button>
+                  <button 
+                    onClick={() => handleNavClick('catalog-section', 'Casio G-Shock')}
+                    className="w-full text-left p-1.5 hover:bg-neutral-50 hover:text-neutral-950 rounded flex justify-between"
+                  >
+                    <span>G-Shock Tough (200M Shockproof)</span>
+                    <ArrowRight className="w-3.5 h-3.5 text-neutral-400" />
+                  </button>
+                  <button 
+                    onClick={() => handleNavClick('catalog-section', 'Casio ProTrek')}
+                    className="w-full text-left p-1.5 hover:bg-neutral-50 hover:text-neutral-950 rounded flex justify-between"
+                  >
+                    <span>ProTrek Solar (Outdoor Compass)</span>
+                    <ArrowRight className="w-3.5 h-3.5 text-neutral-400" />
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* 2. WOMEN */}
+            <div 
+              className="relative h-full flex items-center"
+              onMouseEnter={() => setActiveDropdown('women')}
+              onMouseLeave={() => setActiveDropdown(null)}
+            >
+              <button 
+                onClick={() => handleNavClick('catalog-section', 'Casio LTP')}
+                className="hover:text-neutral-950 transition-colors flex items-center gap-1 py-2 cursor-pointer border-b-2 border-transparent hover:border-neutral-950"
+              >
+                <span>Women</span>
+                <ChevronDown className="w-3 h-3 text-neutral-400" />
+              </button>
+
+              {activeDropdown === 'women' && (
+                <div className="absolute top-full left-0 w-64 bg-white border border-neutral-200 shadow-xl rounded-b p-4 space-y-2 text-xs font-medium normal-case tracking-normal animate-in fade-in-50 duration-150 z-50">
+                  <div className="font-bold text-[10px] tracking-widest uppercase text-neutral-400 pb-1 border-b border-neutral-100">
+                    Women's Casio Timepieces
+                  </div>
+                  <button 
+                    onClick={() => handleNavClick('catalog-section', 'Casio LTP')}
+                    className="w-full text-left p-1.5 hover:bg-neutral-50 hover:text-neutral-950 rounded flex justify-between"
+                  >
+                    <span>Casio LTP Elegance & Dress</span>
+                    <ArrowRight className="w-3.5 h-3.5 text-neutral-400" />
+                  </button>
+                  <button 
+                    onClick={() => handleNavClick('catalog-section', 'Casio Vintage')}
+                    className="w-full text-left p-1.5 hover:bg-neutral-50 hover:text-neutral-950 rounded flex justify-between"
+                  >
+                    <span>Vintage Rose Gold & Silver Mesh</span>
+                    <ArrowRight className="w-3.5 h-3.5 text-neutral-400" />
+                  </button>
+                  <button 
+                    onClick={() => handleNavClick('catalog-section', 'Casio LTP')}
+                    className="w-full text-left p-1.5 hover:bg-neutral-50 hover:text-neutral-950 rounded flex justify-between"
+                  >
+                    <span>Leather Strap Petite Watches</span>
+                    <ArrowRight className="w-3.5 h-3.5 text-neutral-400" />
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* 3. BRANDS / COLLECTIONS */}
+            <div 
+              className="relative h-full flex items-center"
+              onMouseEnter={() => setActiveDropdown('brands')}
+              onMouseLeave={() => setActiveDropdown(null)}
+            >
+              <button 
+                onClick={() => handleNavClick('catalog-section', 'All')}
+                className="hover:text-neutral-950 transition-colors flex items-center gap-1 py-2 cursor-pointer border-b-2 border-transparent hover:border-neutral-950"
+              >
+                <span>Collections</span>
+                <ChevronDown className="w-3 h-3 text-neutral-400" />
+              </button>
+
+              {activeDropdown === 'brands' && (
+                <div className="absolute top-full left-0 w-72 bg-white border border-neutral-200 shadow-xl rounded-b p-4 space-y-2 text-xs font-medium normal-case tracking-normal animate-in fade-in-50 duration-150 z-50">
+                  <div className="font-bold text-[10px] tracking-widest uppercase text-neutral-400 pb-1 border-b border-neutral-100">
+                    Featured Casio Lines
+                  </div>
+                  <button onClick={() => handleNavClick('catalog-section', 'Casio Edifice')} className="w-full text-left p-1.5 hover:bg-neutral-50 rounded flex justify-between">
+                    <span>Edifice (Speed & Tech)</span>
+                    <span className="text-[10px] text-neutral-400 font-mono">100M WR</span>
+                  </button>
+                  <button onClick={() => handleNavClick('catalog-section', 'Casio G-Shock')} className="w-full text-left p-1.5 hover:bg-neutral-50 rounded flex justify-between">
+                    <span>G-Shock (Absolute Toughness)</span>
+                    <span className="text-[10px] text-neutral-400 font-mono">200M WR</span>
+                  </button>
+                  <button onClick={() => handleNavClick('catalog-section', 'Casio Vintage')} className="w-full text-left p-1.5 hover:bg-neutral-50 rounded flex justify-between">
+                    <span>Casio Vintage (1980s Retro Icons)</span>
+                    <span className="text-[10px] text-neutral-400 font-mono">Digital</span>
+                  </button>
+                  <button onClick={() => handleNavClick('catalog-section', 'Casio MTP')} className="w-full text-left p-1.5 hover:bg-neutral-50 rounded flex justify-between">
+                    <span>Casio MTP (Gentlemen Dress)</span>
+                    <span className="text-[10px] text-neutral-400 font-mono">Quartz</span>
+                  </button>
+                  <button onClick={() => handleNavClick('catalog-section', 'Casio LTP')} className="w-full text-left p-1.5 hover:bg-neutral-50 rounded flex justify-between">
+                    <span>Casio LTP (Ladies Fine Watch)</span>
+                    <span className="text-[10px] text-neutral-400 font-mono">Dress</span>
+                  </button>
+                  <button onClick={() => handleNavClick('catalog-section', 'Casio ProTrek')} className="w-full text-left p-1.5 hover:bg-neutral-50 rounded flex justify-between">
+                    <span>ProTrek (Triple Sensor Outdoor)</span>
+                    <span className="text-[10px] text-neutral-400 font-mono">Solar</span>
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* 4. UNISEX */}
+            <button 
+              onClick={() => handleNavClick('catalog-section', 'Casio Vintage')}
+              className="hover:text-neutral-950 transition-colors cursor-pointer py-2 border-b-2 border-transparent hover:border-neutral-950"
+            >
+              Unisex
+            </button>
+
+            {/* 5. BOUTIQUE SHOWROOM */}
+            <button 
+              onClick={() => handleNavClick('store-location')}
+              className="hover:text-neutral-950 transition-colors cursor-pointer py-2 border-b-2 border-transparent hover:border-neutral-950"
+            >
+              Saddar Store
+            </button>
+
+            {/* 6. WARRANTY */}
+            <button 
+              onClick={() => handleNavClick('warranty-section')}
+              className="hover:text-neutral-950 transition-colors cursor-pointer py-2 border-b-2 border-transparent hover:border-neutral-950"
+            >
+              Warranty
+            </button>
+          </nav>
+
+          {/* Right: Search, Wishlist, Account, Shopping Bag */}
+          <div className="flex items-center gap-1.5 sm:gap-3">
+            {/* Search Input Bar (Desktop) */}
+            <div className="relative">
+              <div className="hidden sm:flex items-center bg-neutral-100 hover:bg-neutral-100/80 border border-neutral-300 rounded px-3 py-2 w-44 md:w-56 lg:w-64 transition-all">
+                <Search className="w-3.5 h-3.5 text-neutral-500 shrink-0 mr-2" />
+                <input 
+                  type="text"
+                  placeholder="Search model, series..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full bg-transparent text-xs text-neutral-900 focus:outline-none placeholder:text-neutral-500 font-sans"
+                />
+                {searchQuery && (
+                  <button 
+                    onClick={() => setSearchQuery('')}
+                    className="text-neutral-400 hover:text-neutral-700 p-0.5 ml-1"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                )}
+              </div>
+
+              {/* Mobile Search Trigger */}
+              <button 
+                onClick={() => setIsSearchOpen(!isSearchOpen)}
+                className="sm:hidden p-2 text-neutral-800 hover:text-neutral-950 active:scale-95 transition-transform"
+                title="Search watches"
+                aria-label="Search watches"
+              >
+                <Search className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Wishlist Button */}
+            <button 
+              onClick={() => setIsWishlistOpen(true)}
+              className="relative p-2 text-neutral-800 hover:text-rose-600 active:scale-95 transition-transform cursor-pointer"
+              title="Saved Watches (Wishlist)"
+              aria-label="View Saved Watches"
+            >
+              <Heart className={`w-5 h-5 ${wishlist.length > 0 ? 'text-rose-600 fill-rose-100' : ''}`} />
+              {wishlist.length > 0 && (
+                <span className="absolute top-1 right-1 bg-rose-600 text-white font-mono text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center shadow-xs">
+                  {wishlist.length}
+                </span>
+              )}
+            </button>
+
+            {/* Account / Login Trigger */}
+            <button
+              onClick={() => setIsAccountModalOpen(true)}
+              className="p-2 text-neutral-800 hover:text-neutral-950 active:scale-95 transition-transform cursor-pointer hidden sm:flex"
+              title="Account / Track Order"
+              aria-label="Customer Account"
+            >
+              <User className="w-5 h-5" />
+            </button>
+
+            {/* Shopping Cart Bag (LifeStyle Collection Style with Badge & Subtotal) */}
+            <button 
+              onClick={() => setIsCartOpen(true)}
+              className="flex items-center gap-2 px-3 sm:px-4 py-2.5 bg-neutral-950 hover:bg-neutral-800 active:scale-95 text-white font-medium rounded transition-all cursor-pointer shadow-sm"
+              aria-label="Open Shopping Bag"
+            >
+              <div className="relative">
+                <ShoppingBag className="w-4 h-4 text-amber-300" />
+                {cartItemsCount > 0 && (
+                  <span className="absolute -top-2 -right-2 bg-amber-400 text-neutral-950 font-mono text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center">
+                    {cartItemsCount}
+                  </span>
+                )}
+              </div>
+              <span className="font-mono text-xs font-bold tracking-tight">
+                {cartItemsCount === 0 ? 'Bag' : formatPKR(cartTotal)}
+              </span>
+            </button>
           </div>
         </div>
-      </div>
 
-      {/* Main Navigation Bar */}
-      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-14 sm:h-16 flex items-center justify-between gap-2 sm:gap-4">
-        {/* Left: Mobile Menu Trigger + Brand Wordmark */}
-        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-          <button 
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden p-2 -ml-1 text-slate-700 hover:text-slate-950 active:scale-95 transition-transform"
-            aria-label="Toggle Navigation Menu"
-          >
-            {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-          </button>
-          
-          <a 
-            href="#" 
-            onClick={(e) => { e.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-            className="flex flex-col group min-w-0"
-          >
-            <span 
-              className="text-base sm:text-lg lg:text-xl font-black tracking-tight text-slate-900 group-hover:text-amber-800 transition-colors uppercase truncate"
-              style={{ fontFamily: "'Cinzel', serif" }}
-            >
-              New Madina Electronics
-            </span>
-            <span className="hidden sm:block text-[9px] font-bold tracking-widest text-slate-400 uppercase -mt-0.5">
-              Genuine Casio Timepieces · Saddar Karachi
-            </span>
-          </a>
-        </div>
-
-        {/* Center: Desktop Navigation Links */}
-        <nav className="hidden md:flex items-center gap-6 lg:gap-7 text-xs lg:text-sm font-semibold text-slate-700">
-          <button 
-            onClick={() => handleNavClick('catalog-section', 'All')}
-            className="hover:text-slate-950 transition-colors cursor-pointer"
-          >
-            All Watches
-          </button>
-          <button 
-            onClick={() => handleNavClick('catalog-section', 'Casio MTP')}
-            className="hover:text-slate-950 transition-colors cursor-pointer"
-          >
-            Casio MTP
-          </button>
-          <button 
-            onClick={() => handleNavClick('catalog-section', 'Casio LTP')}
-            className="hover:text-slate-950 transition-colors cursor-pointer"
-          >
-            Casio LTP
-          </button>
-          <button 
-            onClick={() => handleNavClick('catalog-section', 'Casio Edifice')}
-            className="hover:text-slate-950 transition-colors cursor-pointer"
-          >
-            Edifice
-          </button>
-          <button 
-            onClick={() => handleNavClick('catalog-section', 'Casio G-Shock')}
-            className="hover:text-slate-950 transition-colors cursor-pointer"
-          >
-            G-Shock
-          </button>
-          <button 
-            onClick={() => handleNavClick('catalog-section', 'Casio Vintage')}
-            className="hover:text-slate-950 transition-colors cursor-pointer"
-          >
-            Vintage
-          </button>
-          <button 
-            onClick={() => handleNavClick('store-location')}
-            className="hover:text-slate-950 transition-colors cursor-pointer"
-          >
-            Saddar Store
-          </button>
-          <button 
-            onClick={() => handleNavClick('warranty-section')}
-            className="hover:text-slate-950 transition-colors cursor-pointer"
-          >
-            Warranty
-          </button>
-        </nav>
-
-        {/* Right: Primary Action Tools */}
-        <div className="flex items-center gap-1 sm:gap-2">
-          {/* Quick Search Toggle / Input */}
-          <div className="relative">
-            {/* Desktop expanded input */}
-            <div className="hidden sm:flex items-center bg-slate-50 border border-slate-300 rounded-lg px-3 py-1.5 w-44 md:w-56 lg:w-64 shadow-2xs">
-              <Search className="w-3.5 h-3.5 text-slate-500 shrink-0 mr-2" />
+        {/* Mobile Full-Width Search Input */}
+        {isSearchOpen && (
+          <div className="sm:hidden px-3 py-2.5 bg-neutral-100 border-t border-neutral-200 animate-in slide-in-from-top-1 fade-in">
+            <div className="flex items-center bg-white border border-neutral-300 rounded px-3 py-2 shadow-xs">
+              <Search className="w-4 h-4 text-neutral-500 shrink-0 mr-2" />
               <input 
                 type="text"
-                placeholder="Search Casio models..."
+                placeholder="Search Casio model e.g. MTP-1302, GA-2100..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-transparent text-xs text-slate-900 focus:outline-none placeholder:text-slate-400"
+                autoFocus
+                className="w-full bg-transparent text-xs text-neutral-900 focus:outline-none placeholder:text-neutral-500"
               />
               {searchQuery && (
                 <button 
                   onClick={() => setSearchQuery('')}
-                  className="text-slate-400 hover:text-slate-700 p-0.5 ml-1"
+                  className="text-neutral-400 hover:text-neutral-700 p-1 mr-1"
                 >
-                  <X className="w-3 h-3" />
+                  <X className="w-3.5 h-3.5" />
                 </button>
               )}
-            </div>
-
-            {/* Mobile search icon trigger */}
-            <button 
-              onClick={() => setIsSearchOpen(!isSearchOpen)}
-              className="sm:hidden p-2 text-slate-700 hover:text-slate-950 active:scale-95 transition-transform rounded-md"
-              title="Search watches"
-              aria-label="Search watches"
-            >
-              <Search className="w-5 h-5" />
-            </button>
-          </div>
-
-          {/* Wishlist Heart Button */}
-          <button 
-            onClick={() => setIsWishlistOpen(true)}
-            className="relative p-2 text-slate-700 hover:text-rose-600 active:scale-95 transition-transform rounded-md cursor-pointer"
-            title="Saved Watches (Wishlist)"
-            aria-label="View Saved Watches"
-          >
-            <Heart className={`w-5 h-5 ${wishlist.length > 0 ? 'text-rose-600 fill-rose-100' : ''}`} />
-            {wishlist.length > 0 && (
-              <span className="absolute top-1 right-1 bg-rose-600 text-white font-mono text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center shadow-xs">
-                {wishlist.length}
-              </span>
-            )}
-          </button>
-
-          {/* Cart Bag Button */}
-          <button 
-            onClick={() => setIsCartOpen(true)}
-            className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-3.5 py-1.5 sm:py-2 bg-slate-900 hover:bg-slate-800 active:scale-95 text-white font-semibold rounded-lg shadow-sm transition-all cursor-pointer"
-            aria-label="Open Shopping Bag"
-          >
-            <div className="relative">
-              <ShoppingBag className="w-4 h-4 text-amber-400" />
-              {cartItemsCount > 0 && (
-                <span className="absolute -top-1.5 -right-2 bg-amber-500 text-slate-950 font-mono text-[9px] font-black w-3.5 h-3.5 rounded-full flex items-center justify-center">
-                  {cartItemsCount}
-                </span>
-              )}
-            </div>
-            <span className="font-mono text-xs font-bold tracking-tight">
-              {cartItemsCount === 0 ? 'Bag' : formatPKR(cartTotal)}
-            </span>
-          </button>
-        </div>
-      </div>
-
-      {/* Mobile Dedicated Full-Width Search Input (When Search Toggled) */}
-      {isSearchOpen && (
-        <div className="sm:hidden px-3 py-2 bg-slate-50 border-t border-slate-200 animate-in slide-in-from-top-1 fade-in">
-          <div className="flex items-center bg-white border border-slate-300 rounded-lg px-3 py-2 shadow-xs">
-            <Search className="w-4 h-4 text-slate-500 shrink-0 mr-2" />
-            <input 
-              type="text"
-              placeholder="Search by model e.g. MTP-1302, GA-2100, A168..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              autoFocus
-              className="w-full bg-transparent text-xs text-slate-900 focus:outline-none placeholder:text-slate-400"
-            />
-            {searchQuery && (
               <button 
-                onClick={() => setSearchQuery('')}
-                className="text-slate-400 hover:text-slate-700 p-1 mr-1"
+                onClick={() => setIsSearchOpen(false)}
+                className="text-neutral-600 font-bold text-xs pl-2 border-l border-neutral-200"
               >
-                <X className="w-3.5 h-3.5" />
-              </button>
-            )}
-            <button 
-              onClick={() => setIsSearchOpen(false)}
-              className="text-xs text-slate-600 font-semibold px-2 py-0.5 ml-1 border-l border-slate-200"
-            >
-              Done
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Mobile Navigation Drawer Panel */}
-      {mobileMenuOpen && (
-        <div className="md:hidden bg-white border-b border-slate-200 px-4 py-4 space-y-4 shadow-xl animate-in slide-in-from-top-2 fade-in">
-          <div>
-            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-2">
-              Browse Casio Collections
-            </span>
-            <div className="grid grid-cols-2 gap-2 text-xs font-semibold">
-              <button 
-                onClick={() => handleNavClick('catalog-section', 'All')}
-                className="text-left px-3 py-2.5 rounded-lg bg-slate-900 text-white flex items-center justify-between"
-              >
-                <span>All Watches</span>
-              </button>
-              <button 
-                onClick={() => handleNavClick('catalog-section', 'Casio MTP')}
-                className="text-left px-3 py-2.5 rounded-lg bg-slate-50 text-slate-800 hover:bg-slate-100 border border-slate-200"
-              >
-                Casio MTP (Men)
-              </button>
-              <button 
-                onClick={() => handleNavClick('catalog-section', 'Casio LTP')}
-                className="text-left px-3 py-2.5 rounded-lg bg-slate-50 text-slate-800 hover:bg-slate-100 border border-slate-200"
-              >
-                Casio LTP (Ladies)
-              </button>
-              <button 
-                onClick={() => handleNavClick('catalog-section', 'Casio Edifice')}
-                className="text-left px-3 py-2.5 rounded-lg bg-slate-50 text-slate-800 hover:bg-slate-100 border border-slate-200"
-              >
-                Casio Edifice
-              </button>
-              <button 
-                onClick={() => handleNavClick('catalog-section', 'Casio G-Shock')}
-                className="text-left px-3 py-2.5 rounded-lg bg-slate-50 text-slate-800 hover:bg-slate-100 border border-slate-200"
-              >
-                Casio G-Shock
-              </button>
-              <button 
-                onClick={() => handleNavClick('catalog-section', 'Casio Vintage')}
-                className="text-left px-3 py-2.5 rounded-lg bg-slate-50 text-slate-800 hover:bg-slate-100 border border-slate-200"
-              >
-                Casio Vintage
-              </button>
-              <button 
-                onClick={() => handleNavClick('catalog-section', 'Casio ProTrek')}
-                className="text-left px-3 py-2.5 rounded-lg bg-slate-50 text-slate-800 hover:bg-slate-100 border border-slate-200"
-              >
-                Casio ProTrek
-              </button>
-              <button 
-                onClick={() => handleNavClick('warranty-section')}
-                className="text-left px-3 py-2.5 rounded-lg bg-emerald-50 text-emerald-900 border border-emerald-200 flex items-center gap-1.5"
-              >
-                <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                <span>1-Year Warranty</span>
+                Close
               </button>
             </div>
           </div>
+        )}
 
-          {/* Quick Direct Actions */}
-          <div className="pt-3 border-t border-slate-200 grid grid-cols-3 gap-2 text-center text-xs">
-            <a 
-              href="tel:+923213979883"
-              className="p-2.5 rounded-lg bg-slate-100 text-slate-900 font-bold flex flex-col items-center gap-1 hover:bg-slate-200 transition-colors"
-            >
-              <Phone className="w-4 h-4 text-slate-700" />
-              <span>Call Store</span>
-            </a>
-            <a 
-              href="https://wa.me/923213979883"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="p-2.5 rounded-lg bg-emerald-50 text-emerald-800 font-bold flex flex-col items-center gap-1 border border-emerald-200 hover:bg-emerald-100 transition-colors"
-            >
-              <MessageCircle className="w-4 h-4 text-emerald-600" />
-              <span>WhatsApp</span>
-            </a>
-            <a 
-              href="https://maps.app.goo.gl/mtfksLzuMSzJgqvq8"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="p-2.5 rounded-lg bg-amber-50 text-amber-900 font-bold flex flex-col items-center gap-1 border border-amber-200 hover:bg-amber-100 transition-colors"
-            >
-              <MapPin className="w-4 h-4 text-amber-700" />
-              <span>Directions</span>
-            </a>
-          </div>
+        {/* Mobile Navigation Drawer - LifeStyle Collection Architecture */}
+        {mobileMenuOpen && (
+          <div className="lg:hidden border-t border-neutral-200 bg-white shadow-2xl animate-in slide-in-from-top-2 duration-200 max-h-[85vh] overflow-y-auto">
+            <div className="p-4 space-y-4">
+              {/* Account Quick Bar on Mobile */}
+              <div className="p-3 bg-neutral-50 rounded border border-neutral-200 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <User className="w-4 h-4 text-neutral-700" />
+                  <span className="text-xs font-bold text-neutral-900">Customer Account</span>
+                </div>
+                <button
+                  onClick={() => { setMobileMenuOpen(false); setIsAccountModalOpen(true); }}
+                  className="text-xs font-bold text-amber-800 hover:underline"
+                >
+                  Track / Sign In
+                </button>
+              </div>
 
-          <div className="text-[11px] text-slate-500 text-center pt-1 font-medium">
-            Shop 141, 1st Floor, Paradise Shopping Centre, Saddar, Karachi
+              {/* Collections Grid */}
+              <div className="text-[10px] font-bold tracking-[0.2em] text-neutral-400 uppercase">
+                Browse Timepieces
+              </div>
+              <div className="grid grid-cols-2 gap-2 text-xs font-semibold">
+                {[
+                  { name: 'All Watches', filter: 'All' },
+                  { name: 'Men (MTP Series)', filter: 'Casio MTP' },
+                  { name: 'Women (LTP Series)', filter: 'Casio LTP' },
+                  { name: 'Edifice Motorsport', filter: 'Casio Edifice' },
+                  { name: 'G-Shock 200M Tough', filter: 'Casio G-Shock' },
+                  { name: 'Vintage 1980s Retro', filter: 'Casio Vintage' },
+                  { name: 'ProTrek Solar Compass', filter: 'Casio ProTrek' }
+                ].map((item) => (
+                  <button
+                    key={item.filter}
+                    onClick={() => handleNavClick('catalog-section', item.filter)}
+                    className="p-3 text-left bg-neutral-50 hover:bg-neutral-100 rounded border border-neutral-200 text-neutral-900"
+                  >
+                    {item.name}
+                  </button>
+                ))}
+              </div>
+
+              {/* Store & Direct Support Links */}
+              <div className="pt-3 border-t border-neutral-200 space-y-2 text-xs">
+                <button
+                  onClick={() => handleNavClick('store-location')}
+                  className="w-full flex items-center gap-2 p-2.5 rounded hover:bg-neutral-50 text-neutral-800 border border-neutral-100"
+                >
+                  <MapPin className="w-4 h-4 text-amber-700 shrink-0" />
+                  <span>Shop 141, Paradise Shopping Centre, Saddar</span>
+                </button>
+
+                <button
+                  onClick={() => handleNavClick('warranty-section')}
+                  className="w-full flex items-center gap-2 p-2.5 rounded hover:bg-neutral-50 text-neutral-800 border border-neutral-100"
+                >
+                  <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <span>1-Year Stamped Official Warranty</span>
+                </button>
+
+                <a
+                  href="https://wa.me/923213979883"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full flex items-center justify-center gap-2 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded font-bold shadow-sm"
+                >
+                  <MessageCircle className="w-4 h-4" />
+                  <span>WhatsApp Concierge (+92 321 3979883)</span>
+                </a>
+              </div>
+            </div>
           </div>
-        </div>
-      )}
-    </header>
+        )}
+      </header>
+
+      {/* Account / Track Order Modal */}
+      <AccountModal 
+        isOpen={isAccountModalOpen} 
+        onClose={() => setIsAccountModalOpen(false)} 
+      />
+    </>
   );
 };

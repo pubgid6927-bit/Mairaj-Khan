@@ -34,7 +34,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ onClose }) => {
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const deliveryFee = 350;
+  const deliveryFee = cartTotal >= 15000 ? 0 : 350;
   const grandTotal = cartTotal + deliveryFee;
 
   const handleCopy = (text: string, fieldName: string) => {

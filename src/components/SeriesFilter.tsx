@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { SlidersHorizontal, RotateCcw, ChevronDown, Check } from 'lucide-react';
+import { SlidersHorizontal, RotateCcw, ChevronDown, Check, X } from 'lucide-react';
 
 interface SeriesFilterProps {
   activeSeries: string;
@@ -42,26 +42,25 @@ export const SeriesFilter: React.FC<SeriesFilterProps> = ({
   const [isFilterPanelOpen, setIsFilterPanelOpen] = useState(false);
 
   const seriesTabs: { label: string; shortLabel: string; value: string }[] = [
-    { label: 'All Watches', shortLabel: 'All', value: 'All' },
-    { label: 'Casio MTP (Men)', shortLabel: 'MTP (Men)', value: 'Casio MTP' },
-    { label: 'Casio LTP (Ladies)', shortLabel: 'LTP (Ladies)', value: 'Casio LTP' },
+    { label: 'All Collections', shortLabel: 'All', value: 'All' },
     { label: 'Casio Edifice', shortLabel: 'Edifice', value: 'Casio Edifice' },
     { label: 'Casio G-Shock', shortLabel: 'G-Shock', value: 'Casio G-Shock' },
     { label: 'Casio Vintage', shortLabel: 'Vintage', value: 'Casio Vintage' },
+    { label: 'Casio MTP (Men)', shortLabel: 'MTP (Men)', value: 'Casio MTP' },
+    { label: 'Casio LTP (Ladies)', shortLabel: 'LTP (Ladies)', value: 'Casio LTP' },
     { label: 'Casio ProTrek', shortLabel: 'ProTrek', value: 'Casio ProTrek' }
   ];
 
-  // Count active non-series filters
   const activeFilterCount = 
     (selectedPriceRange !== 'All' ? 1 : 0) +
     (selectedBand !== 'All' ? 1 : 0) +
     (selectedMovement !== 'All' ? 1 : 0);
 
   return (
-    <div className="space-y-2.5">
-      {/* Primary Series Segmented Controls (Smooth Horizontal Touch Carousel) */}
-      <div className="relative">
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1.5 no-scrollbar scroll-smooth">
+    <div className="space-y-4">
+      {/* Primary Collection Tabs - Lifestyle Collection Architectural Underline Strip */}
+      <div className="border-b border-neutral-200">
+        <div className="flex items-center gap-1 sm:gap-2 overflow-x-auto pb-0 no-scrollbar scroll-smooth">
           {seriesTabs.map((tab) => {
             const isActive = activeSeries === tab.value;
 
@@ -69,203 +68,194 @@ export const SeriesFilter: React.FC<SeriesFilterProps> = ({
               <button
                 key={tab.value}
                 onClick={() => onSelectSeries(tab.value)}
-                className={`px-3.5 py-2 text-xs font-semibold rounded-lg whitespace-nowrap transition-all flex items-center justify-center cursor-pointer shrink-0 active:scale-95 ${
+                className={`px-3 sm:px-5 py-3 text-xs sm:text-sm font-semibold tracking-wider uppercase whitespace-nowrap transition-all duration-200 cursor-pointer relative shrink-0 ${
                   isActive
-                    ? 'bg-slate-900 text-white shadow-xs font-bold'
-                    : 'bg-white text-slate-700 hover:text-slate-950 hover:bg-slate-50 border border-slate-200'
+                    ? 'text-neutral-950 font-bold'
+                    : 'text-neutral-500 hover:text-neutral-900'
                 }`}
               >
                 <span>{tab.label}</span>
+                {isActive && (
+                  <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-neutral-950" />
+                )}
               </button>
             );
           })}
         </div>
       </div>
 
-      {/* Secondary Controls Bar */}
-      <div className="p-2.5 sm:p-3 bg-white border border-slate-200 rounded-xl text-xs shadow-2xs">
-        <div className="flex items-center justify-between gap-2">
-          {/* Mobile Filter Toggle Button */}
+      {/* Secondary Filter & Sort Toolbar */}
+      <div className="p-3 bg-neutral-50/80 border border-neutral-200 rounded text-xs flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-2">
+          {/* Filter Drawer Toggle */}
           <button
             onClick={() => setIsFilterPanelOpen(!isFilterPanelOpen)}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border font-semibold transition-all cursor-pointer ${
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded border text-xs font-semibold tracking-wider uppercase transition-colors cursor-pointer ${
               activeFilterCount > 0 || isFilterPanelOpen
-                ? 'bg-slate-900 text-white border-slate-900 shadow-2xs'
-                : 'bg-slate-50 hover:bg-slate-100 text-slate-800 border-slate-200'
+                ? 'bg-neutral-900 text-white border-neutral-900'
+                : 'bg-white text-neutral-800 border-neutral-300 hover:bg-neutral-100'
             }`}
           >
             <SlidersHorizontal className="w-3.5 h-3.5" />
-            <span>Filters</span>
+            <span>Refine</span>
             {activeFilterCount > 0 && (
-              <span className="w-4 h-4 rounded-full bg-amber-400 text-slate-950 text-[10px] font-extrabold flex items-center justify-center font-mono">
+              <span className="w-4 h-4 rounded-full bg-amber-400 text-neutral-950 text-[10px] font-black flex items-center justify-center font-mono">
                 {activeFilterCount}
               </span>
             )}
-            <ChevronDown className={`w-3.5 h-3.5 transition-transform ${isFilterPanelOpen ? 'rotate-180' : ''}`} />
           </button>
 
-          {/* Quick Gender Shortcuts (Direct Thumb Toggles) */}
-          <div className="hidden sm:flex items-center gap-1 bg-slate-100 p-0.5 rounded-lg">
-            <button
-              onClick={() => onSelectSeries('All')}
-              className={`px-2.5 py-1 text-xs font-semibold rounded-md transition-colors ${
-                activeSeries === 'All' ? 'bg-white text-slate-900 shadow-2xs' : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              All
-            </button>
-            <button
-              onClick={() => onSelectSeries('Casio MTP')}
-              className={`px-2.5 py-1 text-xs font-semibold rounded-md transition-colors ${
-                activeSeries === 'Casio MTP' ? 'bg-white text-slate-900 shadow-2xs' : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              Men
-            </button>
-            <button
-              onClick={() => onSelectSeries('Casio LTP')}
-              className={`px-2.5 py-1 text-xs font-semibold rounded-md transition-colors ${
-                activeSeries === 'Casio LTP' ? 'bg-white text-slate-900 shadow-2xs' : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              Ladies
-            </button>
-          </div>
-
-          {/* Reset button if active */}
-          {hasActiveFilters && (
-            <button
-              onClick={onResetFilters}
-              className="flex items-center gap-1 text-rose-600 hover:text-rose-700 font-semibold py-1 px-2 hover:bg-rose-50 rounded transition-colors cursor-pointer text-xs"
-            >
-              <RotateCcw className="w-3 h-3" />
-              <span>Reset</span>
-            </button>
-          )}
-
-          {/* Sort Selector */}
-          <div className="flex items-center gap-1.5 ml-auto">
-            <span className="text-slate-500 hidden sm:inline">Sort:</span>
+          {/* Inline Quick Desktop Dropdowns */}
+          <div className="hidden lg:flex items-center gap-2">
+            {/* Band Material */}
             <select
-              value={sortBy}
-              onChange={(e) => onSelectSort(e.target.value)}
-              className="bg-slate-50 border border-slate-200 text-slate-800 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-slate-800 cursor-pointer font-medium text-xs"
+              value={selectedBand}
+              onChange={(e) => onSelectBand(e.target.value)}
+              className="bg-white border border-neutral-300 rounded px-2.5 py-1.5 text-xs text-neutral-800 focus:outline-none focus:border-neutral-900 font-medium"
             >
-              <option value="featured">Featured Collection</option>
-              <option value="price-asc">Price: Low to High</option>
-              <option value="price-desc">Price: High to Low</option>
-              <option value="rating">Top Rated (4.9+)</option>
-              <option value="model">Model Number (A-Z)</option>
+              <option value="All">All Band Materials</option>
+              <option value="Stainless Steel">Stainless Steel</option>
+              <option value="Resin / Silicone">Resin / Silicone</option>
+              <option value="Genuine Leather">Genuine Leather</option>
+              <option value="Titanium">Titanium</option>
+              <option value="Milanese Mesh">Milanese Mesh</option>
+            </select>
+
+            {/* Price Range */}
+            <select
+              value={selectedPriceRange}
+              onChange={(e) => onSelectPriceRange(e.target.value)}
+              className="bg-white border border-neutral-300 rounded px-2.5 py-1.5 text-xs text-neutral-800 focus:outline-none focus:border-neutral-900 font-medium"
+            >
+              <option value="All">All Prices (PKR)</option>
+              <option value="under15k">Under PKR 15,000</option>
+              <option value="15k-30k">PKR 15,000 – 30,000</option>
+              <option value="30k-60k">PKR 30,000 – 60,000</option>
+              <option value="60k-100k">PKR 60,000 – 100,000</option>
+              <option value="above100k">Above PKR 100,000</option>
+            </select>
+
+            {/* Movement */}
+            <select
+              value={selectedMovement}
+              onChange={(e) => onSelectMovement(e.target.value)}
+              className="bg-white border border-neutral-300 rounded px-2.5 py-1.5 text-xs text-neutral-800 focus:outline-none focus:border-neutral-900 font-medium"
+            >
+              <option value="All">All Movements</option>
+              <option value="Quartz">Japanese Quartz</option>
+              <option value="Tough Solar">Tough Solar</option>
+              <option value="Bluetooth Smart">Bluetooth Smart</option>
+              <option value="Digital">Digital Multi-Function</option>
+              <option value="Chronograph">Chronograph</option>
             </select>
           </div>
         </div>
 
-        {/* Expandable Filter Panel (Touch-Friendly Controls for Mobile & Desktop) */}
-        {isFilterPanelOpen && (
-          <div className="mt-3 pt-3 border-t border-slate-200 space-y-3 animate-in slide-in-from-top-2 fade-in">
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              {/* 1. Price Range */}
-              <div>
-                <label className="block text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-1.5">
-                  Price Budget (PKR)
-                </label>
-                <div className="grid grid-cols-2 sm:grid-cols-1 gap-1">
-                  {[
-                    { label: 'All Prices', val: 'All' },
-                    { label: 'Under Rs. 15,000', val: 'under15k' },
-                    { label: 'Rs. 15,000 – 30,000', val: '15k-30k' },
-                    { label: 'Rs. 30,000 – 60,000', val: '30k-60k' },
-                    { label: 'Above Rs. 60,000', val: 'above100k' }
-                  ].map((p) => (
-                    <button
-                      key={p.val}
-                      onClick={() => onSelectPriceRange(p.val)}
-                      className={`text-left px-2.5 py-1.5 rounded text-xs transition-colors flex items-center justify-between ${
-                        selectedPriceRange === p.val
-                          ? 'bg-slate-900 text-white font-bold'
-                          : 'bg-slate-50 hover:bg-slate-100 text-slate-700'
-                      }`}
-                    >
-                      <span className="truncate">{p.label}</span>
-                      {selectedPriceRange === p.val && <Check className="w-3 h-3 text-amber-400 shrink-0" />}
-                    </button>
-                  ))}
-                </div>
-              </div>
+        {/* Right Side: Sort By Selector & Reset */}
+        <div className="flex items-center gap-2 ml-auto">
+          <div className="flex items-center gap-1.5 text-neutral-600 font-medium">
+            <span className="hidden sm:inline text-[11px] uppercase tracking-wider text-neutral-400">Sort:</span>
+            <select
+              value={sortBy}
+              onChange={(e) => onSelectSort(e.target.value)}
+              className="bg-white border border-neutral-300 rounded px-2.5 py-1.5 text-xs text-neutral-900 font-semibold focus:outline-none focus:border-neutral-900"
+            >
+              <option value="featured">Featured Curations</option>
+              <option value="price-asc">Price: Low to High</option>
+              <option value="price-desc">Price: High to Low</option>
+              <option value="rating">Top Rated</option>
+              <option value="model">Model (A – Z)</option>
+            </select>
+          </div>
 
-              {/* 2. Band Material */}
-              <div>
-                <label className="block text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-1.5">
-                  Strap / Band Material
-                </label>
-                <div className="grid grid-cols-2 sm:grid-cols-1 gap-1">
-                  {[
-                    { label: 'All Bands', val: 'All' },
-                    { label: 'Stainless Steel', val: 'Stainless Steel' },
-                    { label: 'Resin / Silicone', val: 'Resin / Silicone' },
-                    { label: 'Genuine Leather', val: 'Genuine Leather' },
-                    { label: 'Titanium / Mesh', val: 'Titanium' }
-                  ].map((b) => (
-                    <button
-                      key={b.val}
-                      onClick={() => onSelectBand(b.val)}
-                      className={`text-left px-2.5 py-1.5 rounded text-xs transition-colors flex items-center justify-between ${
-                        selectedBand === b.val
-                          ? 'bg-slate-900 text-white font-bold'
-                          : 'bg-slate-50 hover:bg-slate-100 text-slate-700'
-                      }`}
-                    >
-                      <span className="truncate">{b.label}</span>
-                      {selectedBand === b.val && <Check className="w-3 h-3 text-amber-400 shrink-0" />}
-                    </button>
-                  ))}
-                </div>
-              </div>
+          {hasActiveFilters && (
+            <button
+              onClick={onResetFilters}
+              className="px-2.5 py-1.5 text-neutral-600 hover:text-neutral-950 hover:bg-neutral-200/60 rounded flex items-center gap-1 transition-colors cursor-pointer text-xs font-semibold"
+              title="Reset all filters"
+            >
+              <RotateCcw className="w-3 h-3" />
+              <span className="hidden sm:inline">Reset</span>
+            </button>
+          )}
+        </div>
+      </div>
 
-              {/* 3. Movement Type */}
-              <div>
-                <label className="block text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-1.5">
-                  Movement / Module
-                </label>
-                <div className="grid grid-cols-2 sm:grid-cols-1 gap-1">
-                  {[
-                    { label: 'All Movements', val: 'All' },
-                    { label: 'Quartz (Analog)', val: 'Quartz' },
-                    { label: 'Digital', val: 'Digital' },
-                    { label: 'Chronograph', val: 'Chronograph' },
-                    { label: 'Tough Solar', val: 'Tough Solar' }
-                  ].map((m) => (
-                    <button
-                      key={m.val}
-                      onClick={() => onSelectMovement(m.val)}
-                      className={`text-left px-2.5 py-1.5 rounded text-xs transition-colors flex items-center justify-between ${
-                        selectedMovement === m.val
-                          ? 'bg-slate-900 text-white font-bold'
-                          : 'bg-slate-50 hover:bg-slate-100 text-slate-700'
-                      }`}
-                    >
-                      <span className="truncate">{m.label}</span>
-                      {selectedMovement === m.val && <Check className="w-3 h-3 text-amber-400 shrink-0" />}
-                    </button>
-                  ))}
-                </div>
-              </div>
+      {/* Expanded Refine Panel (Mobile & Tablet) */}
+      {isFilterPanelOpen && (
+        <div className="p-4 bg-white border border-neutral-200 rounded space-y-4 animate-in slide-in-from-top-2 duration-200 shadow-sm">
+          <div className="flex items-center justify-between border-b border-neutral-100 pb-2">
+            <h4 className="font-bold text-neutral-900 text-xs tracking-wider uppercase">
+              Filter By Specifications
+            </h4>
+            <button
+              onClick={() => setIsFilterPanelOpen(false)}
+              className="text-neutral-400 hover:text-neutral-900 p-1"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+            {/* Band */}
+            <div>
+              <label className="block text-neutral-500 font-semibold uppercase text-[10px] tracking-wider mb-1">
+                Band Material
+              </label>
+              <select
+                value={selectedBand}
+                onChange={(e) => onSelectBand(e.target.value)}
+                className="w-full bg-neutral-50 border border-neutral-300 rounded p-2 text-xs"
+              >
+                <option value="All">All Band Materials</option>
+                <option value="Stainless Steel">Stainless Steel</option>
+                <option value="Resin / Silicone">Resin / Silicone</option>
+                <option value="Genuine Leather">Genuine Leather</option>
+                <option value="Titanium">Titanium</option>
+                <option value="Milanese Mesh">Milanese Mesh</option>
+              </select>
             </div>
 
-            <div className="flex items-center justify-between pt-2 border-t border-slate-100">
-              <span className="text-[11px] text-slate-500 font-mono">
-                {activeFilterCount} filter{activeFilterCount === 1 ? '' : 's'} applied
-              </span>
-              <button
-                onClick={() => setIsFilterPanelOpen(false)}
-                className="px-3 py-1 bg-slate-900 text-white font-bold text-xs rounded-md shadow-2xs"
+            {/* Price */}
+            <div>
+              <label className="block text-neutral-500 font-semibold uppercase text-[10px] tracking-wider mb-1">
+                Price Range
+              </label>
+              <select
+                value={selectedPriceRange}
+                onChange={(e) => onSelectPriceRange(e.target.value)}
+                className="w-full bg-neutral-50 border border-neutral-300 rounded p-2 text-xs"
               >
-                Close Filters
-              </button>
+                <option value="All">All Prices</option>
+                <option value="under15k">Under PKR 15,000</option>
+                <option value="15k-30k">PKR 15,000 – 30,000</option>
+                <option value="30k-60k">PKR 30,000 – 60,000</option>
+                <option value="60k-100k">PKR 60,000 – 100,000</option>
+                <option value="above100k">Above PKR 100,000</option>
+              </select>
+            </div>
+
+            {/* Movement */}
+            <div>
+              <label className="block text-neutral-500 font-semibold uppercase text-[10px] tracking-wider mb-1">
+                Movement Type
+              </label>
+              <select
+                value={selectedMovement}
+                onChange={(e) => onSelectMovement(e.target.value)}
+                className="w-full bg-neutral-50 border border-neutral-300 rounded p-2 text-xs"
+              >
+                <option value="All">All Movements</option>
+                <option value="Quartz">Japanese Quartz</option>
+                <option value="Tough Solar">Tough Solar</option>
+                <option value="Bluetooth Smart">Bluetooth Smart</option>
+                <option value="Digital">Digital Multi-Function</option>
+                <option value="Chronograph">Chronograph</option>
+              </select>
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 };
