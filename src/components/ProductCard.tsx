@@ -14,10 +14,16 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
 
   const isFavorited = isInWishlist(product.id);
 
-  // Category display e.g. "CASIO EDIFICE", "CASIO GENERAL", "CASIO G-SHOCK"
-  const categoryTag = product.series.includes('MTP') || product.series.includes('LTP') 
-    ? 'CASIO GENERAL' 
-    : product.series.toUpperCase();
+  // Brand Name in bold uppercase centered font (LifeStyle Collection style)
+  const brandName = product.series.includes('Edifice')
+    ? 'CASIO EDIFICE'
+    : product.series.includes('G-Shock')
+    ? 'CASIO G-SHOCK'
+    : product.series.includes('Vintage')
+    ? 'CASIO VINTAGE'
+    : product.series.includes('ProTrek')
+    ? 'CASIO PROTREK'
+    : 'CASIO';
 
   const discountPercent = product.originalPricePKR && product.originalPricePKR > product.pricePKR
     ? Math.round(((product.originalPricePKR - product.pricePKR) / product.originalPricePKR) * 100)
@@ -26,13 +32,18 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   return (
     <article
       onClick={() => setSelectedProduct(product)}
-      className="group relative flex flex-col justify-between h-full bg-transparent border-none outline-none shadow-none p-2 sm:p-3 cursor-pointer select-none transition-transform duration-300"
-      style={{ border: 'none', boxShadow: 'none' }}
+      className="group relative flex flex-col justify-between h-full bg-white border-0 outline-none p-0 cursor-pointer select-none transition-transform duration-300"
+      style={{
+        background: 'transparent',
+        border: 'none',
+        outline: 'none',
+        boxShadow: 'none'
+      }}
     >
-      {/* Top Floating Discount Tag (Tiny, Clean, Borderless) */}
+      {/* Top Floating Discount Tag (Tiny clean floating tag on top-left of image without heavy box) */}
       {discountPercent && (
         <div className="absolute top-1 left-1 sm:top-2 sm:left-2 z-10 pointer-events-none">
-          <span className="text-[10px] sm:text-[11px] font-bold tracking-wider text-rose-700 bg-rose-50/90 px-1.5 py-0.5 rounded-xs">
+          <span className="text-[10px] sm:text-[11px] font-bold tracking-wider text-rose-700 bg-rose-50/90 px-1.5 py-0.5 rounded-none">
             -{discountPercent}%
           </span>
         </div>
@@ -55,8 +66,16 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         <Heart className={`w-4 h-4 transition-transform ${isFavorited ? 'fill-rose-600 text-rose-600 scale-110' : ''}`} />
       </button>
 
-      {/* 1. Pure Floating Watch Image on Transparent Background (Zero Card Border, Zero Gray Frame) */}
-      <div className="relative aspect-square w-full bg-transparent flex items-center justify-center p-2 sm:p-4 mb-2 overflow-hidden">
+      {/* 1. Pure Floating Watch Image: 100% width, zero padding, zero card border, zero grey frame */}
+      <div 
+        className="relative w-full aspect-square flex items-center justify-center overflow-hidden"
+        style={{
+          background: 'transparent',
+          border: 'none',
+          boxShadow: 'none',
+          padding: 0
+        }}
+      >
         {!imageError ? (
           <img
             src={product.imageUrl}
@@ -64,39 +83,41 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
             loading="lazy"
             referrerPolicy="no-referrer"
             onError={() => setImageError(true)}
-            className="w-full h-full object-contain filter drop-shadow-[0_8px_16px_rgba(0,0,0,0.06)] group-hover:scale-105 transition-transform duration-500 ease-out"
+            className="w-full h-full object-contain p-0 transition-transform duration-500 ease-out group-hover:scale-105"
+            style={{
+              background: 'transparent',
+              mixBlendMode: 'multiply'
+            }}
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center p-2">
-            <WatchDialRenderer product={product} className="w-full h-full max-h-[190px]" />
+          <div className="w-full h-full flex items-center justify-center p-0 bg-transparent">
+            <WatchDialRenderer product={product} className="w-full h-full max-h-[220px]" />
           </div>
         )}
       </div>
 
-      {/* 2. Clean Minimalist Typography Below Image (No Divider Lines, No Gray Box Containers) */}
-      <div className="pt-1 space-y-1 text-center sm:text-left">
-        {/* Line 1: Brand / Category in small gray uppercase text */}
-        <p className="text-[10px] sm:text-[11px] text-neutral-400 font-semibold tracking-[0.2em] uppercase truncate">
-          {categoryTag}
+      {/* 2. Exact LifeStyle Collection Typography & Centered Pricing (Zero Divider Lines, Zero Boxes) */}
+      <div className="pt-3 pb-1 space-y-1 text-center w-full">
+        {/* Brand Name: Bold dark font, uppercase, centered */}
+        <p className="text-[12px] sm:text-[13px] font-bold text-neutral-950 uppercase tracking-wider">
+          {brandName}
         </p>
 
-        {/* Line 2: Product Name & Model Code in clean dark font */}
-        <h3 className="text-xs sm:text-[13px] text-neutral-900 font-bold group-hover:text-amber-900 transition-colors truncate leading-snug">
-          <span>{product.model}</span>
-          <span className="text-neutral-300 font-light mx-1">·</span>
-          <span className="text-neutral-600 font-normal">{product.name}</span>
+        {/* Product Title: Muted grey text directly under brand name, max 2 lines */}
+        <h3 className="text-[11px] sm:text-xs text-neutral-500 font-normal line-clamp-2 px-1 leading-relaxed">
+          {product.name}
         </h3>
 
-        {/* Line 3: Clean Price Tag (Active Price + Struck-through Original Price) */}
-        <div className="flex items-baseline justify-center sm:justify-start gap-2 pt-0.5 font-mono">
-          <span className="font-bold text-neutral-950 text-xs sm:text-sm">
-            {formatPKR(product.pricePKR)}
-          </span>
+        {/* Price Layout: Strikethrough reddish-brown price + Final Price in bold black below it */}
+        <div className="pt-1.5 flex flex-col items-center justify-center font-sans">
           {product.originalPricePKR && (
-            <span className="text-neutral-400 line-through text-[11px] sm:text-xs">
+            <span className="text-[11px] sm:text-xs text-[#b91c1c] line-through font-medium">
               {formatPKR(product.originalPricePKR)}
             </span>
           )}
+          <span className="text-xs sm:text-[14px] font-bold text-neutral-950">
+            {formatPKR(product.pricePKR)} <span className="text-[10px] font-normal text-neutral-500">inc. GST</span>
+          </span>
         </div>
       </div>
     </article>

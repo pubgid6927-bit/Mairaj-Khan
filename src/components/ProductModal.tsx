@@ -538,46 +538,45 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) 
                     onClick={() => {
                       setSelectedProduct(rel);
                     }}
-                    className="min-w-[170px] sm:min-w-[200px] md:min-w-0 snap-start bg-transparent border-none outline-none shadow-none p-2 sm:p-3 cursor-pointer group transition-all duration-300 flex flex-col justify-between relative select-none"
-                    style={{ border: 'none', boxShadow: 'none' }}
+                    className="min-w-[170px] sm:min-w-[200px] md:min-w-0 snap-start bg-transparent border-none outline-none shadow-none p-0 cursor-pointer group transition-all duration-300 flex flex-col justify-between relative select-none"
+                    style={{ border: 'none', boxShadow: 'none', background: 'transparent' }}
                   >
                     {/* Discount badge */}
                     {relDiscountPercent && (
-                      <span className="absolute top-1 left-1 z-10 text-[9px] font-bold tracking-wider text-rose-700 bg-rose-50/90 px-1.5 py-0.5 rounded-2xs">
+                      <span className="absolute top-1 left-1 z-10 text-[9px] font-bold tracking-wider text-rose-700 bg-rose-50/90 px-1.5 py-0.5">
                         -{relDiscountPercent}%
                       </span>
                     )}
 
                     {/* Centered Pure Floating Watch Image */}
-                    <div className="relative aspect-square w-full bg-transparent flex items-center justify-center p-2 sm:p-3 mb-2 overflow-hidden">
+                    <div className="relative aspect-square w-full bg-transparent flex items-center justify-center p-0 mb-2 overflow-hidden">
                       <img 
                         src={rel.imageUrl} 
                         alt={`${rel.model} - ${rel.name}`} 
                         loading="lazy"
                         referrerPolicy="no-referrer"
-                        className="w-full h-full object-contain filter drop-shadow-[0_4px_12px_rgba(0,0,0,0.05)] group-hover:scale-105 transition-transform duration-300" 
+                        className="w-full h-full object-contain p-0 transition-transform duration-300 group-hover:scale-105" 
+                        style={{ background: 'transparent', mixBlendMode: 'multiply' }}
                       />
                     </div>
 
-                    {/* 3 Clean Text Lines (No divider lines, No box container) */}
-                    <div className="pt-1 space-y-1 text-left">
-                      <p className="text-[10px] text-neutral-400 font-semibold tracking-[0.18em] uppercase truncate">
+                    {/* Clean Text Lines (Brand centered, Muted title, 2-line price with inc. GST) */}
+                    <div className="pt-1 space-y-1 text-center w-full">
+                      <p className="text-[11px] sm:text-[12px] font-bold text-neutral-950 uppercase tracking-wider">
                         {rel.series.toUpperCase()}
                       </p>
-                      <h4 className="text-xs sm:text-[13px] font-bold text-neutral-900 group-hover:text-amber-900 transition-colors truncate">
-                        <span>{rel.model}</span>
-                        <span className="text-neutral-300 font-light mx-1">·</span>
-                        <span className="text-neutral-600 font-normal">{rel.name}</span>
+                      <h4 className="text-[11px] text-neutral-500 font-normal line-clamp-2 px-1">
+                        {rel.name}
                       </h4>
-                      <div className="flex items-baseline gap-2 pt-0.5 font-mono">
-                        <span className="text-xs sm:text-sm font-bold text-neutral-950">
-                          {formatPKR(rel.pricePKR)}
-                        </span>
+                      <div className="pt-1 flex flex-col items-center justify-center font-sans">
                         {rel.originalPricePKR && (
-                          <span className="text-[11px] text-neutral-400 line-through">
+                          <span className="text-[10px] text-[#b91c1c] line-through font-medium">
                             {formatPKR(rel.originalPricePKR)}
                           </span>
                         )}
+                        <span className="text-xs sm:text-[13px] font-bold text-neutral-950">
+                          {formatPKR(rel.pricePKR)} <span className="text-[9px] font-normal text-neutral-500">inc. GST</span>
+                        </span>
                       </div>
                     </div>
                   </div>
