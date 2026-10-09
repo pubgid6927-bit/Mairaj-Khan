@@ -115,15 +115,15 @@ export const Header: React.FC = () => {
         </div>
 
         {/* Main Header Bar */}
-        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-18 sm:h-22 flex items-center justify-between gap-3 sm:gap-6">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-16 sm:h-22 flex items-center justify-between gap-2 sm:gap-6 w-full">
           {/* Left: Mobile Menu + Brand Logo */}
-          <div className="flex items-center gap-3 shrink-0 min-w-0">
+          <div className="flex items-center gap-2 sm:gap-3 shrink min-w-0">
             <button 
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="lg:hidden p-2 -ml-1 text-neutral-900 hover:text-black active:scale-95 transition-transform"
+              className="lg:hidden p-1.5 -ml-1 text-neutral-900 hover:text-black active:scale-95 transition-transform shrink-0"
               aria-label="Toggle Navigation Menu"
             >
-              {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+              {mobileMenuOpen ? <X className="w-5 h-5 sm:w-6 sm:h-6" /> : <Menu className="w-5 h-5 sm:w-6 sm:h-6" />}
             </button>
             
             <a 
@@ -132,7 +132,7 @@ export const Header: React.FC = () => {
               className="flex items-center group min-w-0"
             >
               <span 
-                className="text-lg sm:text-2xl lg:text-[26px] font-black tracking-tight text-neutral-950 group-hover:text-amber-800 transition-colors uppercase truncate font-serif"
+                className="text-sm sm:text-2xl lg:text-[26px] font-black tracking-tight text-neutral-950 group-hover:text-amber-800 transition-colors uppercase truncate font-serif"
                 style={{ fontFamily: "'Cinzel', serif" }}
               >
                 New Madina Electronics

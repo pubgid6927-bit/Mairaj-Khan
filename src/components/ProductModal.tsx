@@ -538,28 +538,29 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) 
                     onClick={() => {
                       setSelectedProduct(rel);
                     }}
-                    className="min-w-[190px] sm:min-w-[220px] md:min-w-0 snap-start bg-white border border-neutral-200/80 hover:border-neutral-900 p-3 sm:p-4 rounded-xs shadow-[0_1px_3px_rgba(0,0,0,0.02)] hover:shadow-[0_10px_20px_rgba(0,0,0,0.06)] cursor-pointer group transition-all duration-300 flex flex-col justify-between relative select-none"
+                    className="min-w-[170px] sm:min-w-[200px] md:min-w-0 snap-start bg-transparent border-none outline-none shadow-none p-2 sm:p-3 cursor-pointer group transition-all duration-300 flex flex-col justify-between relative select-none"
+                    style={{ border: 'none', boxShadow: 'none' }}
                   >
                     {/* Discount badge */}
                     {relDiscountPercent && (
-                      <span className="absolute top-2.5 left-2.5 z-10 text-[9px] font-bold tracking-wider text-rose-700 bg-rose-50 border border-rose-200/70 px-1.5 py-0.5 rounded-2xs">
+                      <span className="absolute top-1 left-1 z-10 text-[9px] font-bold tracking-wider text-rose-700 bg-rose-50/90 px-1.5 py-0.5 rounded-2xs">
                         -{relDiscountPercent}%
                       </span>
                     )}
 
-                    {/* Centered Pure White Watch Image */}
-                    <div className="relative aspect-square w-full bg-white flex items-center justify-center p-2 sm:p-4 mb-2 overflow-hidden">
+                    {/* Centered Pure Floating Watch Image */}
+                    <div className="relative aspect-square w-full bg-transparent flex items-center justify-center p-2 sm:p-3 mb-2 overflow-hidden">
                       <img 
                         src={rel.imageUrl} 
                         alt={`${rel.model} - ${rel.name}`} 
                         loading="lazy"
                         referrerPolicy="no-referrer"
-                        className="w-full h-full object-contain filter drop-shadow-[0_2px_8px_rgba(0,0,0,0.04)] group-hover:scale-105 transition-transform duration-300" 
+                        className="w-full h-full object-contain filter drop-shadow-[0_4px_12px_rgba(0,0,0,0.05)] group-hover:scale-105 transition-transform duration-300" 
                       />
                     </div>
 
-                    {/* 3 Clean Text Lines */}
-                    <div className="pt-2 border-t border-neutral-100 space-y-1 text-left">
+                    {/* 3 Clean Text Lines (No divider lines, No box container) */}
+                    <div className="pt-1 space-y-1 text-left">
                       <p className="text-[10px] text-neutral-400 font-semibold tracking-[0.18em] uppercase truncate">
                         {rel.series.toUpperCase()}
                       </p>

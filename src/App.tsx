@@ -493,8 +493,8 @@ const MainContent: React.FC = () => {
                 <div 
                   className={`grid grid-cols-2 ${
                     isFilterSidebarVisible 
-                      ? 'sm:grid-cols-2 md:grid-cols-3 gap-3.5 sm:gap-6 lg:gap-7' 
-                      : 'sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3.5 sm:gap-6 lg:gap-8'
+                      ? 'sm:grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-10 sm:gap-x-8 sm:gap-y-14 lg:gap-x-10 lg:gap-y-16' 
+                      : 'sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-10 sm:gap-x-8 sm:gap-y-14 lg:gap-x-10 lg:gap-y-16'
                   }`}
                 >
                   {paginatedProducts.map((product) => (
