@@ -25,30 +25,17 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     ? 'CASIO PROTREK'
     : 'CASIO';
 
-  const discountPercent = product.originalPricePKR && product.originalPricePKR > product.pricePKR
-    ? Math.round(((product.originalPricePKR - product.pricePKR) / product.originalPricePKR) * 100)
-    : null;
-
   return (
     <article
       onClick={() => setSelectedProduct(product)}
-      className="group relative flex flex-col justify-between h-full bg-white border-0 outline-none p-0 cursor-pointer select-none transition-transform duration-300"
+      className="group relative flex flex-col justify-between h-full bg-white border-none shadow-none outline-none p-0 cursor-pointer select-none transition-transform duration-300"
       style={{
-        background: 'transparent',
+        background: '#FFFFFF',
         border: 'none',
         outline: 'none',
         boxShadow: 'none'
       }}
     >
-      {/* Top Floating Discount Tag (Tiny clean floating tag on top-left of image without heavy box) */}
-      {discountPercent && (
-        <div className="absolute top-1 left-1 sm:top-2 sm:left-2 z-10 pointer-events-none">
-          <span className="text-[10px] sm:text-[11px] font-bold tracking-wider text-rose-700 bg-rose-50/90 px-1.5 py-0.5 rounded-none">
-            -{discountPercent}%
-          </span>
-        </div>
-      )}
-
       {/* Floating Wishlist Heart Icon (Top Right) */}
       <button
         onClick={(e) => {
@@ -66,11 +53,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         <Heart className={`w-4 h-4 transition-transform ${isFavorited ? 'fill-rose-600 text-rose-600 scale-110' : ''}`} />
       </button>
 
-      {/* 1. Pure Floating Watch Image: 100% width, zero padding, zero card border, zero grey frame */}
+      {/* 1. Pure Floating Watch Image: Large scale(1.18), zero borders, zero boxes, zero badges */}
       <div 
         className="relative w-full aspect-square flex items-center justify-center overflow-hidden"
         style={{
-          background: 'transparent',
+          background: '#FFFFFF',
           border: 'none',
           boxShadow: 'none',
           padding: 0
@@ -83,14 +70,15 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
             loading="lazy"
             referrerPolicy="no-referrer"
             onError={() => setImageError(true)}
-            className="w-full h-full object-contain p-0 transition-transform duration-500 ease-out group-hover:scale-105"
+            className="w-full h-full object-contain p-0 transition-transform duration-500 ease-out group-hover:scale-125"
             style={{
               background: 'transparent',
+              transform: 'scale(1.18)',
               mixBlendMode: 'multiply'
             }}
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center p-0 bg-transparent">
+          <div className="w-full h-full flex items-center justify-center p-0 bg-transparent" style={{ transform: 'scale(1.18)' }}>
             <WatchDialRenderer product={product} className="w-full h-full max-h-[220px]" />
           </div>
         )}

@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useCart, formatPKR } from '../context/CartContext';
+import { ALL_PRODUCTS } from '../data/products';
 import { 
   ShoppingBag, 
   Heart, 
@@ -23,6 +24,8 @@ import { AccountModal } from './AccountModal';
 export const Header: React.FC = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
+  const searchContainerRef = useRef<HTMLDivElement>(null);
   const [isAccountModalOpen, setIsAccountModalOpen] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
 
@@ -50,8 +53,31 @@ export const Header: React.FC = () => {
     setIsWishlistOpen,
     searchQuery, 
     setSearchQuery,
-    setActiveSeries
+    setActiveSeries,
+    setSelectedProduct
   } = useCart();
+
+  // Close search results on click outside
+  useEffect(() => {
+    const handleClickOutside = (e: globalThis.MouseEvent) => {
+      if (searchContainerRef.current && !searchContainerRef.current.contains(e.target as Node)) {
+        setIsSearchFocused(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Instant Live Search Results (LifeStyle Collection Style)
+  const liveSearchResults = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return [];
+    return ALL_PRODUCTS.filter((p) => 
+      p.model.toLowerCase().includes(q) ||
+      p.name.toLowerCase().includes(q) ||
+      p.series.toLowerCase().includes(q)
+    );
+  }, [searchQuery]);
 
   const handleNavClick = (sectionId: string, seriesFilter?: string) => {
     if (seriesFilter) {
@@ -59,6 +85,7 @@ export const Header: React.FC = () => {
     }
     setMobileMenuOpen(false);
     setIsSearchOpen(false);
+    setIsSearchFocused(false);
     setActiveDropdown(null);
 
     const el = document.getElementById(sectionId);
@@ -311,26 +338,119 @@ export const Header: React.FC = () => {
 
           {/* Right: Search, Wishlist, Account, Shopping Bag */}
           <div className="flex items-center gap-1.5 sm:gap-3">
-            {/* Search Input Bar (Desktop) */}
-            <div className="relative">
-              <div className="hidden sm:flex items-center bg-neutral-100 hover:bg-neutral-100/80 border border-neutral-300 rounded px-3 py-2 w-44 md:w-56 lg:w-64 transition-all">
+            {/* Search Input Bar & Live Dropdown (Desktop) */}
+            <div className="relative" ref={searchContainerRef}>
+              <div className="hidden sm:flex items-center bg-neutral-100 hover:bg-neutral-100/90 border border-neutral-300 focus-within:border-neutral-900 focus-within:bg-white rounded px-3 py-2 w-44 md:w-56 lg:w-64 transition-all">
                 <Search className="w-3.5 h-3.5 text-neutral-500 shrink-0 mr-2" />
                 <input 
                   type="text"
-                  placeholder="Search model, series..."
+                  placeholder="Search Casio model, series..."
                   value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onFocus={() => setIsSearchFocused(true)}
+                  onChange={(e) => {
+                    setSearchQuery(e.target.value);
+                    setIsSearchFocused(true);
+                  }}
                   className="w-full bg-transparent text-xs text-neutral-900 focus:outline-none placeholder:text-neutral-500 font-sans"
                 />
                 {searchQuery && (
                   <button 
-                    onClick={() => setSearchQuery('')}
-                    className="text-neutral-400 hover:text-neutral-700 p-0.5 ml-1"
+                    onClick={() => {
+                      setSearchQuery('');
+                      setIsSearchFocused(false);
+                    }}
+                    className="text-neutral-400 hover:text-neutral-700 p-0.5 ml-1 cursor-pointer"
                   >
                     <X className="w-3 h-3" />
                   </button>
                 )}
               </div>
+
+              {/* Desktop Live Search Dropdown */}
+              {isSearchFocused && searchQuery.trim().length > 0 && (
+                <div className="hidden sm:block absolute top-full right-0 mt-2 w-80 md:w-96 bg-white shadow-2xl rounded border border-neutral-200 z-50 overflow-hidden animate-in fade-in slide-in-from-top-1">
+                  <div className="px-3 py-2 bg-neutral-50 border-b border-neutral-100 flex items-center justify-between text-[11px] text-neutral-500">
+                    <span className="font-semibold uppercase tracking-wider">Results ({liveSearchResults.length})</span>
+                    <button
+                      onClick={() => setIsSearchFocused(false)}
+                      className="text-neutral-400 hover:text-neutral-700 text-[10px] cursor-pointer"
+                    >
+                      Close
+                    </button>
+                  </div>
+
+                  <div className="max-h-80 overflow-y-auto divide-y divide-neutral-100">
+                    {liveSearchResults.slice(0, 6).map((item) => {
+                      const brand = item.series.includes('Edifice')
+                        ? 'CASIO EDIFICE'
+                        : item.series.includes('G-Shock')
+                        ? 'CASIO G-SHOCK'
+                        : item.series.includes('Vintage')
+                        ? 'CASIO VINTAGE'
+                        : item.series.includes('ProTrek')
+                        ? 'CASIO PROTREK'
+                        : 'CASIO';
+
+                      return (
+                        <div
+                          key={item.id}
+                          onClick={() => {
+                            setSelectedProduct(item);
+                            setIsSearchFocused(false);
+                          }}
+                          className="flex items-center gap-3 p-3 hover:bg-neutral-50 transition-colors cursor-pointer group"
+                        >
+                          <div className="w-12 h-12 shrink-0 bg-transparent flex items-center justify-center overflow-hidden">
+                            <img 
+                              src={item.imageUrl} 
+                              alt={item.model} 
+                              className="w-full h-full object-contain transition-transform duration-300 group-hover:scale-110"
+                              style={{ mixBlendMode: 'multiply' }}
+                            />
+                          </div>
+
+                          <div className="flex-1 min-w-0">
+                            <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider">
+                              {brand}
+                            </p>
+                            <p className="text-xs font-semibold text-neutral-900 truncate">
+                              {item.name}
+                            </p>
+                            <div className="flex items-center gap-2 mt-0.5">
+                              {item.originalPricePKR && (
+                                <span className="text-[10px] text-[#b91c1c] line-through">
+                                  {formatPKR(item.originalPricePKR)}
+                                </span>
+                              )}
+                              <span className="text-xs font-bold text-neutral-950">
+                                {formatPKR(item.pricePKR)} <span className="text-[9px] font-normal text-neutral-400">inc. GST</span>
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+
+                    {liveSearchResults.length === 0 && (
+                      <div className="p-6 text-center text-xs text-neutral-500">
+                        No timepieces found matching "{searchQuery}"
+                      </div>
+                    )}
+                  </div>
+
+                  {liveSearchResults.length > 6 && (
+                    <button
+                      onClick={() => {
+                        handleNavClick('catalog-section');
+                        setIsSearchFocused(false);
+                      }}
+                      className="w-full py-2.5 px-4 bg-neutral-50 hover:bg-neutral-100 text-center text-xs font-semibold text-neutral-900 border-t border-neutral-100 transition-colors cursor-pointer block"
+                    >
+                      View all {liveSearchResults.length} timepieces →
+                    </button>
+                  )}
+                </div>
+              )}
 
               {/* Mobile Search Trigger */}
               <button 
@@ -389,7 +509,7 @@ export const Header: React.FC = () => {
           </div>
         </div>
 
-        {/* Mobile Full-Width Search Input */}
+        {/* Mobile Full-Width Search Input & Live Results */}
         {isSearchOpen && (
           <div className="sm:hidden px-3 py-2.5 bg-neutral-100 border-t border-neutral-200 animate-in slide-in-from-top-1 fade-in">
             <div className="flex items-center bg-white border border-neutral-300 rounded px-3 py-2 shadow-xs">
@@ -417,6 +537,79 @@ export const Header: React.FC = () => {
                 Close
               </button>
             </div>
+
+            {/* Mobile Live Results Dropdown */}
+            {searchQuery.trim().length > 0 && (
+              <div className="mt-2 bg-white rounded border border-neutral-200 shadow-lg max-h-72 overflow-y-auto divide-y divide-neutral-100">
+                {liveSearchResults.slice(0, 6).map((item) => {
+                  const brand = item.series.includes('Edifice')
+                    ? 'CASIO EDIFICE'
+                    : item.series.includes('G-Shock')
+                    ? 'CASIO G-SHOCK'
+                    : item.series.includes('Vintage')
+                    ? 'CASIO VINTAGE'
+                    : item.series.includes('ProTrek')
+                    ? 'CASIO PROTREK'
+                    : 'CASIO';
+
+                  return (
+                    <div
+                      key={item.id}
+                      onClick={() => {
+                        setSelectedProduct(item);
+                        setIsSearchOpen(false);
+                      }}
+                      className="flex items-center gap-3 p-2.5 hover:bg-neutral-50 active:bg-neutral-100 cursor-pointer"
+                    >
+                      <div className="w-11 h-11 shrink-0 flex items-center justify-center">
+                        <img 
+                          src={item.imageUrl} 
+                          alt={item.model} 
+                          className="w-full h-full object-contain"
+                          style={{ mixBlendMode: 'multiply' }}
+                        />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[9px] font-bold text-neutral-400 uppercase tracking-wider">
+                          {brand}
+                        </p>
+                        <p className="text-xs font-semibold text-neutral-900 truncate">
+                          {item.name}
+                        </p>
+                        <div className="flex items-center gap-2 mt-0.5">
+                          {item.originalPricePKR && (
+                            <span className="text-[10px] text-[#b91c1c] line-through">
+                              {formatPKR(item.originalPricePKR)}
+                            </span>
+                          )}
+                          <span className="text-xs font-bold text-neutral-950">
+                            {formatPKR(item.pricePKR)} <span className="text-[9px] font-normal text-neutral-400">inc. GST</span>
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+
+                {liveSearchResults.length === 0 && (
+                  <div className="p-4 text-center text-xs text-neutral-500">
+                    No timepieces found matching "{searchQuery}"
+                  </div>
+                )}
+
+                {liveSearchResults.length > 6 && (
+                  <button
+                    onClick={() => {
+                      handleNavClick('catalog-section');
+                      setIsSearchOpen(false);
+                    }}
+                    className="w-full py-2 px-3 bg-neutral-50 text-center text-xs font-semibold text-neutral-900 border-t border-neutral-100"
+                  >
+                    View all {liveSearchResults.length} timepieces →
+                  </button>
+                )}
+              </div>
+            )}
           </div>
         )}
 
