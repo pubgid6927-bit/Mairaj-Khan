@@ -1,10 +1,10 @@
 import React from 'react';
 import { useCart, formatPKR } from '../context/CartContext';
 import { ALL_PRODUCTS } from '../data/products';
+import { UniqueLuxuryBagIcon } from './UniqueLuxuryBagIcon';
 import { 
   X, 
   Heart, 
-  ShoppingBag, 
   Trash2, 
   ArrowRight,
   ShieldCheck
@@ -133,7 +133,7 @@ export const WishlistDrawer: React.FC = () => {
                         onClick={(e) => handleMoveToCart(product, e)}
                         className="w-full py-1.5 px-3 bg-neutral-950 hover:bg-neutral-800 text-white font-bold tracking-wider uppercase rounded text-[11px] transition-colors flex items-center justify-center gap-1.5 shadow-2xs"
                       >
-                        <ShoppingBag className="w-3 h-3 text-amber-300" />
+                        <UniqueLuxuryBagIcon className="w-3.5 h-3.5 text-amber-300" />
                         <span>Move to Bag</span>
                       </button>
                     </div>

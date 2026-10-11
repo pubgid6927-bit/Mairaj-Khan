@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useCart, formatPKR } from '../context/CartContext';
 import { ALL_PRODUCTS } from '../data/products';
+import { UniqueLuxuryBagIcon } from './UniqueLuxuryBagIcon';
 import { 
-  ShoppingBag, 
   Heart, 
   Search, 
   MapPin, 
@@ -32,7 +32,7 @@ export const Header: React.FC = () => {
   // Ticker announcement rotation
   const [tickerIndex, setTickerIndex] = useState(0);
   const tickerMessages = [
-    'FREE EXPRESS SHIPPING ACROSS PAKISTAN ON ORDERS ABOVE RS. 15,000',
+    'EXPRESS COURIER DELIVERY ACROSS PAKISTAN · TCS & LEOPARDS NATIONWIDE',
     '100% GENUINE CASIO TIMEPIECES WITH OFFICIAL 1-YEAR STAMPED WARRANTY',
     'VISIT OUR SADDAR KARACHI SHOWROOM · SHOP 141, PARADISE SHOPPING CENTRE',
     'EXPRESS CASH ON DELIVERY (COD) AVAILABLE NATIONWIDE · VERIFY BEFORE RECEIVING'
@@ -79,6 +79,16 @@ export const Header: React.FC = () => {
     );
   }, [searchQuery]);
 
+  // Scroll detection to elevate sticky main header
+  const [isScrolled, setIsScrolled] = useState(false);
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 20);
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
   const handleNavClick = (sectionId: string, seriesFilter?: string) => {
     if (seriesFilter) {
       setActiveSeries(seriesFilter);
@@ -96,55 +106,55 @@ export const Header: React.FC = () => {
 
   return (
     <>
-      <header className="sticky top-0 z-40 bg-white border-b border-neutral-200/90 font-sans shadow-xs">
-        {/* Top Scrolling Info / News Ticker Bar - LifeStyle Collection Exact Signature */}
-        <div className="bg-[#111111] text-white text-[10px] sm:text-[11px] py-1.5 px-3 sm:px-8 border-b border-white/10 tracking-[0.06em]">
-          <div className="max-w-7xl mx-auto flex items-center justify-between">
-            {/* Center / Left: Rotating News Ticker */}
-            <div className="flex items-center gap-2 overflow-hidden flex-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0 animate-pulse" />
-              <div className="overflow-hidden whitespace-nowrap">
-                <span className="text-neutral-200 font-medium inline-block animate-in fade-in duration-500 key={tickerIndex}">
-                  {tickerMessages[tickerIndex]}
-                </span>
-              </div>
-            </div>
-
-            {/* Right Quick Links */}
-            <div className="hidden lg:flex items-center gap-5 text-neutral-300 shrink-0 text-[10px] pl-4">
-              <button
-                onClick={() => setIsAccountModalOpen(true)}
-                className="hover:text-amber-300 transition-colors flex items-center gap-1 cursor-pointer"
-              >
-                <Package className="w-3 h-3 text-amber-400" />
-                <span>Track Order</span>
-              </button>
-              <span className="text-neutral-700">|</span>
-              <a
-                href="#store-location"
-                className="hover:text-amber-300 transition-colors flex items-center gap-1"
-              >
-                <MapPin className="w-3 h-3 text-amber-400" />
-                <span>Saddar Store</span>
-              </a>
-              <span className="text-neutral-700">|</span>
-              <a
-                href="tel:+923213979883"
-                className="hover:text-amber-300 transition-colors font-mono font-bold text-white flex items-center gap-1"
-              >
-                <Phone className="w-3 h-3 text-amber-400" />
-                <span>+92 321 3979883</span>
-              </a>
-              <span className="text-neutral-700">|</span>
-              <span className="font-mono text-amber-300 font-bold">PKR (Rs.)</span>
+      {/* Top Scrolling Info / News Ticker Bar - LifeStyle Collection Exact Signature */}
+      <div className="bg-[#111111] text-white text-[10px] sm:text-[11px] py-1.5 px-3 sm:px-8 border-b border-white/10 tracking-[0.06em]">
+        <div className="max-w-7xl mx-auto flex items-center justify-between">
+          {/* Center / Left: Rotating News Ticker */}
+          <div className="flex items-center gap-2 overflow-hidden flex-1">
+            <span className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0 animate-pulse" />
+            <div className="overflow-hidden whitespace-nowrap">
+              <span className="text-neutral-200 font-medium inline-block animate-in fade-in duration-500" key={tickerIndex}>
+                {tickerMessages[tickerIndex]}
+              </span>
             </div>
           </div>
-        </div>
 
-        {/* Main Header Bar */}
-        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-16 sm:h-22 flex items-center justify-between gap-2 sm:gap-6 w-full">
+          {/* Right Quick Links */}
+          <div className="hidden lg:flex items-center gap-5 text-neutral-300 shrink-0 text-[10px] pl-4">
+            <button
+              onClick={() => setIsAccountModalOpen(true)}
+              className="hover:text-amber-300 transition-colors flex items-center gap-1 cursor-pointer"
+            >
+              <Package className="w-3 h-3 text-amber-400" />
+              <span>Track Order</span>
+            </button>
+            <span className="text-neutral-700">|</span>
+            <a
+              href="#store-location"
+              className="hover:text-amber-300 transition-colors flex items-center gap-1"
+            >
+              <MapPin className="w-3 h-3 text-amber-400" />
+              <span>Saddar Store</span>
+            </a>
+            <span className="text-neutral-700">|</span>
+            <a
+              href="tel:+923213979883"
+              className="hover:text-amber-300 transition-colors font-mono font-bold text-white flex items-center gap-1"
+            >
+              <Phone className="w-3 h-3 text-amber-400" />
+              <span>+92 321 3979883</span>
+            </a>
+            <span className="text-neutral-700">|</span>
+            <span className="font-mono text-amber-300 font-bold">PKR (Rs.)</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Header Bar - STICKY TOP-0 Z-50 (Always visible on scroll with Name, Search & Unique Bag) */}
+      <header className={`sticky top-0 z-50 bg-white/98 backdrop-blur-md transition-all duration-200 border-b font-sans ${isScrolled ? 'shadow-md border-neutral-300' : 'shadow-xs border-neutral-200/90'}`}>
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between gap-4 sm:gap-8 w-full">
           {/* Left: Mobile Menu + Brand Logo */}
-          <div className="flex items-center gap-2 sm:gap-3 shrink min-w-0">
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0 mr-auto pr-2 sm:pr-4">
             <button 
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="lg:hidden p-1.5 -ml-1 text-neutral-900 hover:text-black active:scale-95 transition-transform shrink-0"
@@ -156,13 +166,16 @@ export const Header: React.FC = () => {
             <a 
               href="#" 
               onClick={(e) => { e.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-              className="flex items-center group min-w-0"
+              className="flex flex-col group shrink-0"
             >
               <span 
-                className="text-sm sm:text-2xl lg:text-[26px] font-black tracking-tight text-neutral-950 group-hover:text-amber-800 transition-colors uppercase truncate font-serif"
+                className="text-xs sm:text-base md:text-lg lg:text-[22px] font-bold tracking-[0.05em] sm:tracking-[0.08em] text-neutral-950 group-hover:text-amber-900 transition-colors uppercase whitespace-nowrap"
                 style={{ fontFamily: "'Cinzel', serif" }}
               >
                 New Madina Electronics
+              </span>
+              <span className="hidden sm:block text-[8px] sm:text-[9px] tracking-[0.25em] text-neutral-400 uppercase font-sans font-medium -mt-0.5">
+                Official Casio Timepieces
               </span>
             </a>
           </div>
@@ -336,15 +349,63 @@ export const Header: React.FC = () => {
             </button>
           </nav>
 
-          {/* Right: Search, Wishlist, Account, Shopping Bag */}
-          <div className="flex items-center gap-1.5 sm:gap-3">
-            {/* Search Input Bar & Live Dropdown (Desktop) */}
-            <div className="relative" ref={searchContainerRef}>
-              <div className="hidden sm:flex items-center bg-neutral-100 hover:bg-neutral-100/90 border border-neutral-300 focus-within:border-neutral-900 focus-within:bg-white rounded px-3 py-2 w-44 md:w-56 lg:w-64 transition-all">
+          {/* Right: Wishlist, Account, Shopping Bag, and Search (Positioned Far Right Away From Name) */}
+          <div className="flex items-center gap-1.5 sm:gap-3 shrink-0 ml-auto pl-2 sm:pl-4">
+            {/* Wishlist Button (Tablet & Desktop, mobile already has dedicated Saved tab in bottom bar) */}
+            <button 
+              onClick={() => setIsWishlistOpen(true)}
+              className="relative p-2 text-neutral-800 hover:text-rose-600 active:scale-95 transition-transform cursor-pointer hidden sm:flex"
+              title="Saved Watches (Wishlist)"
+              aria-label="View Saved Watches"
+            >
+              <Heart className={`w-5 h-5 ${wishlist.length > 0 ? 'text-rose-600 fill-rose-100' : ''}`} />
+              {wishlist.length > 0 && (
+                <span className="absolute top-1 right-1 bg-rose-600 text-white font-mono text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center shadow-xs">
+                  {wishlist.length}
+                </span>
+              )}
+            </button>
+
+            {/* Account / Login Trigger */}
+            <button
+              onClick={() => setIsAccountModalOpen(true)}
+              className="p-2 text-neutral-800 hover:text-neutral-950 active:scale-95 transition-transform cursor-pointer hidden md:flex"
+              title="Account / Track Order"
+              aria-label="Customer Account"
+            >
+              <User className="w-5 h-5" />
+            </button>
+
+            {/* Shopping Cart Bag - Clean, Minimalist */}
+            <button 
+              onClick={() => setIsCartOpen(true)}
+              className="relative p-2 sm:px-2.5 sm:py-2 text-neutral-900 hover:text-black active:scale-95 flex items-center gap-1.5 sm:gap-2 transition-transform cursor-pointer shrink-0"
+              aria-label="Open Shopping Bag"
+              title="View Shopping Bag"
+            >
+              <div className="relative flex items-center justify-center">
+                <UniqueLuxuryBagIcon 
+                  className="w-5 h-5 sm:w-6 sm:h-6 text-neutral-900" 
+                />
+                {cartItemsCount > 0 && (
+                  <span className="absolute -top-1 -right-2 bg-neutral-950 text-white font-mono text-[9px] font-bold min-w-[16px] h-4 px-1 rounded-full flex items-center justify-center shadow-xs">
+                    {cartItemsCount}
+                  </span>
+                )}
+              </div>
+              <span className="hidden md:inline font-mono text-xs font-semibold tracking-tight text-neutral-900">
+                {cartItemsCount === 0 ? 'Bag' : formatPKR(cartTotal)}
+              </span>
+            </button>
+
+            {/* Search Component - Positioned Far Right, Distanced from Brand Name */}
+            <div className="relative ml-1 sm:ml-2" ref={searchContainerRef}>
+              {/* Desktop / Tablet Search Input Bar & Live Dropdown */}
+              <div className="hidden sm:flex items-center bg-neutral-100 hover:bg-neutral-100/90 border border-neutral-300 focus-within:border-neutral-900 focus-within:bg-white rounded px-3 py-2 w-40 md:w-52 lg:w-60 transition-all">
                 <Search className="w-3.5 h-3.5 text-neutral-500 shrink-0 mr-2" />
                 <input 
                   type="text"
-                  placeholder="Search Casio model, series..."
+                  placeholder="Search Casio model..."
                   value={searchQuery}
                   onFocus={() => setIsSearchFocused(true)}
                   onChange={(e) => {
@@ -452,60 +513,16 @@ export const Header: React.FC = () => {
                 </div>
               )}
 
-              {/* Mobile Search Trigger */}
+              {/* Mobile Search Trigger - AT THE FAR RIGHT CORNER (Furthest from brand name) */}
               <button 
                 onClick={() => setIsSearchOpen(!isSearchOpen)}
-                className="sm:hidden p-2 text-neutral-800 hover:text-neutral-950 active:scale-95 transition-transform"
+                className="sm:hidden p-2 text-neutral-900 hover:text-black active:scale-95 transition-transform"
                 title="Search watches"
                 aria-label="Search watches"
               >
                 <Search className="w-5 h-5" />
               </button>
             </div>
-
-            {/* Wishlist Button */}
-            <button 
-              onClick={() => setIsWishlistOpen(true)}
-              className="relative p-2 text-neutral-800 hover:text-rose-600 active:scale-95 transition-transform cursor-pointer"
-              title="Saved Watches (Wishlist)"
-              aria-label="View Saved Watches"
-            >
-              <Heart className={`w-5 h-5 ${wishlist.length > 0 ? 'text-rose-600 fill-rose-100' : ''}`} />
-              {wishlist.length > 0 && (
-                <span className="absolute top-1 right-1 bg-rose-600 text-white font-mono text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center shadow-xs">
-                  {wishlist.length}
-                </span>
-              )}
-            </button>
-
-            {/* Account / Login Trigger */}
-            <button
-              onClick={() => setIsAccountModalOpen(true)}
-              className="p-2 text-neutral-800 hover:text-neutral-950 active:scale-95 transition-transform cursor-pointer hidden sm:flex"
-              title="Account / Track Order"
-              aria-label="Customer Account"
-            >
-              <User className="w-5 h-5" />
-            </button>
-
-            {/* Shopping Cart Bag (LifeStyle Collection Style with Badge & Subtotal) */}
-            <button 
-              onClick={() => setIsCartOpen(true)}
-              className="flex items-center gap-2 px-3 sm:px-4 py-2.5 bg-neutral-950 hover:bg-neutral-800 active:scale-95 text-white font-medium rounded transition-all cursor-pointer shadow-sm"
-              aria-label="Open Shopping Bag"
-            >
-              <div className="relative">
-                <ShoppingBag className="w-4 h-4 text-amber-300" />
-                {cartItemsCount > 0 && (
-                  <span className="absolute -top-2 -right-2 bg-amber-400 text-neutral-950 font-mono text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center">
-                    {cartItemsCount}
-                  </span>
-                )}
-              </div>
-              <span className="font-mono text-xs font-bold tracking-tight">
-                {cartItemsCount === 0 ? 'Bag' : formatPKR(cartTotal)}
-              </span>
-            </button>
           </div>
         </div>
 

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { CartProvider, useCart } from './context/CartContext';
 import { ALL_PRODUCTS } from './data/products';
 import { WatchProduct } from './types';
@@ -232,6 +232,39 @@ const MainContent: React.FC = () => {
   };
 
   const paginatedProducts = filteredProducts.slice(0, visibleCount);
+
+  // Automatic Infinite Scroll Sentinel Ref & Observer
+  const loadMoreSentinelRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const sentinel = loadMoreSentinelRef.current;
+    if (!sentinel) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const first = entries[0];
+        if (first.isIntersecting && visibleCount < filteredProducts.length) {
+          setVisibleCount((prev) => Math.min(prev + PAGE_SIZE, filteredProducts.length));
+        }
+      },
+      { rootMargin: '350px' }
+    );
+
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [visibleCount, filteredProducts.length]);
+
+  // Deep linking: open watch modal if ?watch=MODEL is present in URL
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const watchModel = params.get('watch');
+    if (watchModel && allProducts.length > 0) {
+      const found = allProducts.find((p) => p.model.toLowerCase() === watchModel.toLowerCase());
+      if (found) {
+        setSelectedProduct(found);
+      }
+    }
+  }, [allProducts, setSelectedProduct]);
 
   return (
     <div className="min-h-screen bg-white text-neutral-900 flex flex-col justify-between selection:bg-neutral-900 selection:text-white font-sans antialiased">
@@ -520,15 +553,20 @@ const MainContent: React.FC = () => {
                 </div>
               )}
 
-              {/* Load More Pagination Button */}
+              {/* Automatic Infinite Scroll Sentinel & Subtle Loader */}
               {visibleCount < filteredProducts.length && (
-                <div className="text-center pt-16 sm:pt-20">
-                  <button
-                    onClick={() => setVisibleCount((prev) => prev + PAGE_SIZE)}
-                    className="px-12 py-3.5 bg-transparent hover:bg-neutral-950 border border-neutral-900 text-neutral-950 hover:text-white font-medium text-xs tracking-[0.2em] uppercase rounded transition-all cursor-pointer shadow-2xs"
-                  >
-                    <span>Load More Timepieces</span>
-                  </button>
+                <div ref={loadMoreSentinelRef} className="text-center py-12 flex flex-col items-center justify-center gap-2">
+                  <div className="w-5 h-5 border-2 border-neutral-300 border-t-neutral-950 rounded-full animate-spin" />
+                  <span className="text-[10px] uppercase tracking-widest text-neutral-400 font-sans">
+                    Loading more timepieces...
+                  </span>
+                </div>
+              )}
+
+              {/* End of Catalog Indicator */}
+              {visibleCount >= filteredProducts.length && filteredProducts.length > 0 && (
+                <div className="text-center py-8 mt-6 border-t border-neutral-100 text-[11px] text-neutral-400 uppercase tracking-widest font-sans">
+                  Showing all {filteredProducts.length} timepieces
                 </div>
               )}
             </div>

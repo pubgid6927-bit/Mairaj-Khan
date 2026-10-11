@@ -2,15 +2,17 @@ import React, { useState, useRef, MouseEvent, useEffect, useMemo } from 'react';
 import { WatchProduct } from '../types';
 import { useCart, formatPKR } from '../context/CartContext';
 import { ALL_PRODUCTS } from '../data/products';
+import { UniqueLuxuryBagIcon } from './UniqueLuxuryBagIcon';
 import { 
   X, 
   Heart, 
-  ShoppingBag, 
   ShieldCheck, 
   ChevronLeft, 
   ChevronRight, 
   ChevronDown,
-  Star
+  Star,
+  Share2,
+  Check
 } from 'lucide-react';
 import { WatchDialRenderer } from './WatchDialRenderer';
 
@@ -20,9 +22,10 @@ interface ProductModalProps {
 }
 
 export const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) => {
-  const { addToCart, isInWishlist, toggleWishlist, setIsCartOpen, setSelectedProduct } = useCart();
+  const { addToCart, isInWishlist, toggleWishlist, setIsCartOpen, setSelectedProduct, addToast } = useCart();
   const [imageError, setImageError] = useState(false);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const [copied, setCopied] = useState(false);
 
   // Accordion state (Clean LifeStyle Collection accordion)
   const [openAccordions, setOpenAccordions] = useState<Record<string, boolean>>({
@@ -75,6 +78,32 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) 
     addToCart(product, 1);
     setIsCartOpen(true);
     onClose();
+  };
+
+  const handleShare = async () => {
+    const shareUrl = `${window.location.origin}${window.location.pathname}?watch=${encodeURIComponent(product.model)}`;
+    const shareText = `Check out this authentic Casio ${product.model} (${product.name}) for ${formatPKR(product.pricePKR)} at New Madina Electronics Saddar Karachi!`;
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: `Casio ${product.model} - ${product.name}`,
+          text: shareText,
+          url: shareUrl,
+        });
+        return;
+      } catch (err) {}
+    }
+
+    try {
+      await navigator.clipboard.writeText(`${shareText}\n${shareUrl}`);
+      setCopied(true);
+      addToast('Watch link copied to clipboard! Share with friends.', 'success');
+      setTimeout(() => setCopied(false), 2500);
+    } catch {
+      const waUrl = `https://wa.me/?text=${encodeURIComponent(shareText + ' ' + shareUrl)}`;
+      window.open(waUrl, '_blank');
+    }
   };
 
   // Dynamic Related Watches (4 to 8 similar watches from the same Collection/Series)
@@ -185,19 +214,38 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) 
           <div className="flex flex-col justify-between space-y-6">
             <div className="space-y-4">
               
-              {/* Brand & Wishlist */}
+              {/* Brand & Action Buttons (Share + Wishlist) */}
               <div className="flex items-center justify-between">
                 <p className="text-xs font-bold text-neutral-900 uppercase tracking-widest">
                   {brandDisplayName}
                 </p>
 
-                <button
-                  onClick={() => toggleWishlist(product.id)}
-                  className="p-1.5 text-neutral-400 hover:text-rose-600 transition-colors cursor-pointer"
-                  title={isFavorited ? 'Saved in Wishlist' : 'Add to Wishlist'}
-                >
-                  <Heart className={`w-5 h-5 ${isFavorited ? 'fill-rose-600 text-rose-600' : ''}`} />
-                </button>
+                <div className="flex items-center gap-1.5">
+                  <button
+                    onClick={handleShare}
+                    className="p-1.5 text-neutral-400 hover:text-neutral-950 transition-colors cursor-pointer flex items-center gap-1"
+                    title={copied ? 'Link Copied!' : 'Share Watch'}
+                    aria-label="Share Watch"
+                  >
+                    {copied ? (
+                      <Check className="w-4 h-4 text-emerald-600" />
+                    ) : (
+                      <Share2 className="w-4 h-4" />
+                    )}
+                    <span className="text-[11px] font-medium hidden sm:inline text-neutral-600">
+                      {copied ? 'Copied' : 'Share'}
+                    </span>
+                  </button>
+
+                  <button
+                    onClick={() => toggleWishlist(product.id)}
+                    className="p-1.5 text-neutral-400 hover:text-rose-600 transition-colors cursor-pointer"
+                    title={isFavorited ? 'Saved in Wishlist' : 'Add to Wishlist'}
+                    aria-label="Add to Wishlist"
+                  >
+                    <Heart className={`w-5 h-5 ${isFavorited ? 'fill-rose-600 text-rose-600' : ''}`} />
+                  </button>
+                </div>
               </div>
 
               {/* Title & Model Code */}
@@ -223,14 +271,22 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) 
                 <span className="text-xs text-neutral-500 font-normal">inc. GST</span>
               </div>
 
-              {/* Clean Full-Width Black ADD TO CART Button */}
-              <div className="pt-2">
+              {/* Clean Full-Width Black ADD TO CART Button & Share Button */}
+              <div className="pt-2 space-y-2">
                 <button
                   onClick={handleAddToCart}
                   className="w-full py-3.5 sm:py-4 px-6 bg-neutral-950 hover:bg-neutral-800 active:scale-[0.99] text-white font-semibold tracking-widest uppercase text-xs sm:text-sm transition-all duration-200 cursor-pointer flex items-center justify-center gap-2 rounded-none shadow-xs"
                 >
-                  <ShoppingBag className="w-4 h-4" />
+                  <UniqueLuxuryBagIcon className="w-4 h-4 text-amber-400" />
                   <span>Add to Cart</span>
+                </button>
+
+                <button
+                  onClick={handleShare}
+                  className="w-full py-2.5 px-4 bg-neutral-100 hover:bg-neutral-200 active:scale-[0.99] text-neutral-800 text-xs font-semibold tracking-wider uppercase transition-colors flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  {copied ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Share2 className="w-3.5 h-3.5" />}
+                  <span>{copied ? 'Link Copied to Clipboard!' : 'Share This Timepiece'}</span>
                 </button>
               </div>
             </div>

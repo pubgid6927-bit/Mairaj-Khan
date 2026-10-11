@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { WatchProduct } from '../types';
 import { useCart, formatPKR } from '../context/CartContext';
-import { Heart } from 'lucide-react';
+import { Heart, Share2 } from 'lucide-react';
 import { WatchDialRenderer } from './WatchDialRenderer';
 
 interface ProductCardProps {
@@ -9,7 +9,7 @@ interface ProductCardProps {
 }
 
 export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
-  const { isInWishlist, toggleWishlist, setSelectedProduct } = useCart();
+  const { isInWishlist, toggleWishlist, setSelectedProduct, addToast } = useCart();
   const [imageError, setImageError] = useState(false);
 
   const isFavorited = isInWishlist(product.id);
@@ -25,6 +25,31 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     ? 'CASIO PROTREK'
     : 'CASIO';
 
+  const handleShare = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const shareUrl = `${window.location.origin}${window.location.pathname}?watch=${encodeURIComponent(product.model)}`;
+    const shareText = `Check out Casio ${product.model} (${product.name}) for ${formatPKR(product.pricePKR)} at New Madina Electronics Karachi!`;
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: `Casio ${product.model} - ${product.name}`,
+          text: shareText,
+          url: shareUrl,
+        });
+        return;
+      } catch (err) {}
+    }
+
+    try {
+      await navigator.clipboard.writeText(`${shareText}\n${shareUrl}`);
+      addToast('Watch link copied to clipboard!', 'success');
+    } catch {
+      const waUrl = `https://wa.me/?text=${encodeURIComponent(shareText + ' ' + shareUrl)}`;
+      window.open(waUrl, '_blank');
+    }
+  };
+
   return (
     <article
       onClick={() => setSelectedProduct(product)}
@@ -36,22 +61,33 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         boxShadow: 'none'
       }}
     >
-      {/* Floating Wishlist Heart Icon (Top Right) */}
-      <button
-        onClick={(e) => {
-          e.stopPropagation();
-          toggleWishlist(product.id);
-        }}
-        className={`absolute top-1 right-1 sm:top-2 sm:right-2 w-8 h-8 flex items-center justify-center transition-all duration-200 cursor-pointer z-10 ${
-          isFavorited
-            ? 'text-rose-600 opacity-100'
-            : 'text-neutral-400 hover:text-neutral-900 opacity-0 group-hover:opacity-100'
-        }`}
-        title={isFavorited ? 'Saved in Wishlist' : 'Add to Wishlist'}
-        aria-label={isFavorited ? 'Remove from wishlist' : 'Add to wishlist'}
-      >
-        <Heart className={`w-4 h-4 transition-transform ${isFavorited ? 'fill-rose-600 text-rose-600 scale-110' : ''}`} />
-      </button>
+      {/* Floating Action Icons (Share & Wishlist Heart) */}
+      <div className="absolute top-1 right-1 sm:top-2 sm:right-2 flex items-center gap-0.5 z-10">
+        <button
+          onClick={handleShare}
+          className="w-8 h-8 flex items-center justify-center transition-all duration-200 cursor-pointer text-neutral-400 hover:text-neutral-900 opacity-0 group-hover:opacity-100"
+          title="Share this timepiece"
+          aria-label="Share timepiece"
+        >
+          <Share2 className="w-4 h-4" />
+        </button>
+
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            toggleWishlist(product.id);
+          }}
+          className={`w-8 h-8 flex items-center justify-center transition-all duration-200 cursor-pointer ${
+            isFavorited
+              ? 'text-rose-600 opacity-100'
+              : 'text-neutral-400 hover:text-neutral-900 opacity-0 group-hover:opacity-100'
+          }`}
+          title={isFavorited ? 'Saved in Wishlist' : 'Add to Wishlist'}
+          aria-label={isFavorited ? 'Remove from wishlist' : 'Add to wishlist'}
+        >
+          <Heart className={`w-4 h-4 transition-transform ${isFavorited ? 'fill-rose-600 text-rose-600 scale-110' : ''}`} />
+        </button>
+      </div>
 
       {/* 1. Pure Floating Watch Image: Large scale(1.18), zero borders, zero boxes, zero badges */}
       <div 
