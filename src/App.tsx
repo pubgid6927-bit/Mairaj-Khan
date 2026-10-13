@@ -5,6 +5,7 @@
 
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { CartProvider, useCart } from './context/CartContext';
+import { StoreSettingsProvider } from './context/StoreSettingsContext';
 import { ALL_PRODUCTS } from './data/products';
 import { WatchProduct } from './types';
 import { isSupabaseConfigured, fetchProductsFromSupabase } from './lib/supabase';
@@ -664,9 +665,11 @@ const MainContent: React.FC = () => {
 
 export const App: React.FC = () => {
   return (
-    <CartProvider>
-      <MainContent />
-    </CartProvider>
+    <StoreSettingsProvider>
+      <CartProvider>
+        <MainContent />
+      </CartProvider>
+    </StoreSettingsProvider>
   );
 };
 

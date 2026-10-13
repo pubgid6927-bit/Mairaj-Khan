@@ -14,8 +14,10 @@ import {
   ChevronRight
 } from 'lucide-react';
 import { useCart } from '../context/CartContext';
+import { useStoreSettings } from '../context/StoreSettingsContext';
 
 export const Footer: React.FC = () => {
+  const { settings } = useStoreSettings();
   const [emailInput, setEmailInput] = useState('');
   const [isSubscribed, setIsSubscribed] = useState(false);
   const { addToast, setActiveSeries } = useCart();
@@ -178,15 +180,13 @@ export const Footer: React.FC = () => {
               Saddar Showroom
             </h4>
             <p className="text-neutral-300 leading-relaxed text-xs">
-              First Floor, Paradise Shopping Centre, Shop 141,<br />
-              Abdullah Haroon Rd, Artillery Maidan, Saddar,<br />
-              Karachi, Sindh 74400, Pakistan.
+              {settings.address}
             </p>
             
             <div className="pt-1 space-y-1 text-xs">
               <div className="flex justify-between py-0.5 border-b border-neutral-800">
-                <span className="text-neutral-400">Mon – Sat:</span>
-                <span className="font-mono text-white">11:30 AM – 10:00 PM</span>
+                <span className="text-neutral-400">Timings:</span>
+                <span className="font-mono text-white">{settings.timings}</span>
               </div>
               <div className="flex justify-between py-0.5">
                 <span className="text-neutral-400">Sunday:</span>
@@ -196,20 +196,20 @@ export const Footer: React.FC = () => {
 
             <div className="pt-2 space-y-1.5 font-mono text-xs">
               <a 
-                href="tel:+923213979883" 
+                href={`tel:${settings.phone.replace(/[^0-9+]/g, '')}`} 
                 className="flex items-center gap-2 text-neutral-200 hover:text-white transition-colors"
               >
                 <Phone className="w-3.5 h-3.5 text-amber-400" />
-                <span>+92 321 3979883</span>
+                <span>{settings.phone}</span>
               </a>
               <a 
-                href="https://wa.me/923213979883" 
+                href={`https://wa.me/${settings.whatsapp}`} 
                 target="_blank" 
-                rel="noopener noreferrer"
+                rel="noopener noreferrer" 
                 className="flex items-center gap-2 text-emerald-400 hover:text-emerald-300 transition-colors"
               >
                 <MessageCircle className="w-3.5 h-3.5" />
-                <span>WhatsApp Line: 0321-3979883</span>
+                <span>WhatsApp Line: {settings.phone}</span>
               </a>
             </div>
           </div>

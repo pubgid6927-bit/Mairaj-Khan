@@ -30,9 +30,12 @@ export const mapDbProductToWatch = (row: any): WatchProduct => {
     inStock: row.is_in_stock !== false,
     stockCount: row.stock_count || 10,
     isFeatured: Boolean(row.is_featured),
+    isBestSeller: Boolean(row.is_best_seller),
+    isNewArrival: Boolean(row.is_new_arrival),
     rating: Number(row.rating || 4.9),
     reviewsCount: Number(row.reviews_count || 18),
     imageUrl: row.image_url,
+    alternateImageUrl: row.alternate_image_url || undefined,
     description: row.description || '',
     specs: row.specs || {
       caseDiameter: '42mm',
@@ -59,9 +62,13 @@ export const mapWatchToDbProduct = (watch: WatchProduct) => {
     name: watch.name,
     price_pkr: watch.pricePKR,
     original_price_pkr: watch.originalPricePKR || null,
+    stock_count: watch.stockCount || 10,
     image_url: watch.imageUrl,
+    alternate_image_url: watch.alternateImageUrl || null,
     description: watch.description,
     is_featured: Boolean(watch.isFeatured),
+    is_best_seller: Boolean(watch.isBestSeller),
+    is_new_arrival: Boolean(watch.isNewArrival),
     is_in_stock: watch.inStock,
     rating: watch.rating,
     reviews_count: watch.reviewsCount,
@@ -231,5 +238,97 @@ export const bulkSeedProductsToSupabase = async (
     return { success: true, count: uploadedCount };
   } catch (err: any) {
     return { success: false, count: 0, error: err.message || 'Bulk upload failed' };
+  }
+};
+
+// Site Settings Interface
+export interface SiteSettings {
+  storeName: string;
+  tagline: string;
+  phone: string;
+  whatsapp: string;
+  address: string;
+  timings: string;
+  announcement: string;
+  deliveryFee: number;
+}
+
+export const DEFAULT_SITE_SETTINGS: SiteSettings = {
+  storeName: 'New Madina Electronics',
+  tagline: 'Authorized Casio Watch Store · Saddar Karachi',
+  phone: '+92 321 3979883',
+  whatsapp: '923213979883',
+  address: 'Shop 141, 1st Floor, Paradise Shopping Centre, Saddar, Karachi',
+  timings: '11:30 AM – 10:00 PM (Mon-Sat)',
+  announcement: '100% Genuine Casio Timepieces with Serialized Warranty · Saddar Karachi',
+  deliveryFee: 250
+};
+
+// Fetch site settings from Supabase
+export const fetchSiteSettingsFromSupabase = async (): Promise<SiteSettings | null> => {
+  if (!supabase) return null;
+  try {
+    const { data, error } = await supabase
+      .from('site_settings')
+      .select('value')
+      .eq('key', 'store_info')
+      .maybeSingle();
+
+    if (error) {
+      console.warn('Error fetching site settings from Supabase:', error.message);
+      return null;
+    }
+
+    if (data && data.value) {
+      return {
+        storeName: data.value.store_name || DEFAULT_SITE_SETTINGS.storeName,
+        tagline: data.value.tagline || DEFAULT_SITE_SETTINGS.tagline,
+        phone: data.value.phone || DEFAULT_SITE_SETTINGS.phone,
+        whatsapp: data.value.whatsapp || DEFAULT_SITE_SETTINGS.whatsapp,
+        address: data.value.address || DEFAULT_SITE_SETTINGS.address,
+        timings: data.value.timings || DEFAULT_SITE_SETTINGS.timings,
+        announcement: data.value.announcement || DEFAULT_SITE_SETTINGS.announcement,
+        deliveryFee: Number(data.value.delivery_fee ?? DEFAULT_SITE_SETTINGS.deliveryFee)
+      };
+    }
+    return null;
+  } catch (err) {
+    console.warn('Supabase site_settings fetch error:', err);
+    return null;
+  }
+};
+
+// Save site settings in Supabase
+export const saveSiteSettingsInSupabase = async (
+  settings: SiteSettings
+): Promise<{ success: boolean; error?: string }> => {
+  if (!supabase) {
+    return { success: false, error: 'Supabase is not configured' };
+  }
+  try {
+    const payload = {
+      key: 'store_info',
+      value: {
+        store_name: settings.storeName,
+        tagline: settings.tagline,
+        phone: settings.phone,
+        whatsapp: settings.whatsapp,
+        address: settings.address,
+        timings: settings.timings,
+        announcement: settings.announcement,
+        delivery_fee: settings.deliveryFee
+      },
+      updated_at: new Date().toISOString()
+    };
+
+    const { error } = await supabase
+      .from('site_settings')
+      .upsert(payload, { onConflict: 'key' });
+
+    if (error) throw error;
+    return { success: true };
+  } catch (err: any) {
+    console.warn('Error saving site settings:', err);
+    return { success: false, error: err.message || 'Failed to save settings' };
   }
 };

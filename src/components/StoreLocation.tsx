@@ -1,7 +1,10 @@
 import React from 'react';
+import { useStoreSettings } from '../context/StoreSettingsContext';
 import { MapPin, MessageCircle, Clock, Navigation, ExternalLink, Check, Phone } from 'lucide-react';
 
 export const StoreLocation: React.FC = () => {
+  const { settings } = useStoreSettings();
+
   return (
     <section id="store-location" className="py-16 sm:py-24 bg-[#fbfbfa] border-t border-neutral-200 relative font-sans">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
@@ -15,10 +18,10 @@ export const StoreLocation: React.FC = () => {
             className="text-2xl sm:text-4xl font-extrabold text-neutral-950 tracking-tight font-serif"
             style={{ fontFamily: "'Cinzel', serif" }}
           >
-            New Madina Electronics Store
+            {settings.storeName} Store
           </h2>
           <p className="text-xs sm:text-sm text-neutral-600">
-            Visit our physical timepiece gallery at Paradise Shopping Centre, Saddar to inspect any Casio watch in person, verify caseback serial numbers, and receive complimentary strap adjustments.
+            Visit our physical timepiece gallery at {settings.address} to inspect any Casio watch in person, verify caseback serial numbers, and receive complimentary strap adjustments.
           </p>
         </div>
 
@@ -37,9 +40,7 @@ export const StoreLocation: React.FC = () => {
                     Store Address
                   </h3>
                   <p className="text-xs sm:text-sm text-neutral-700 mt-1 leading-relaxed">
-                    First Floor, Paradise Shopping Centre, Shop 141,<br />
-                    Abdullah Haroon Rd, Artillery Maidan, Saddar,<br />
-                    Karachi, Sindh 74400, Pakistan.
+                    {settings.address}
                   </p>
                   <p className="text-xs text-amber-900 font-medium mt-1.5">
                     Landmark: In the heart of Saddar Electronic & Watch Market, near Zainab Market.
@@ -58,8 +59,8 @@ export const StoreLocation: React.FC = () => {
                   </h3>
                   <div className="mt-2 space-y-1.5 text-xs">
                     <div className="flex justify-between text-neutral-700 py-1 border-b border-neutral-100">
-                      <span>Monday – Saturday:</span>
-                      <span className="font-mono text-neutral-950 font-bold">11:30 AM – 10:00 PM</span>
+                      <span>Store Timings:</span>
+                      <span className="font-mono text-neutral-950 font-bold">{settings.timings}</span>
                     </div>
                     <div className="flex justify-between text-neutral-500 py-1">
                       <span>Sunday:</span>
@@ -83,7 +84,7 @@ export const StoreLocation: React.FC = () => {
                 </a>
 
                 <a
-                  href="https://wa.me/923213979883?text=Assalam%20o%20Alaikum%20New%20Madina%20Electronics!%20I%20am%20planning%20to%20visit%20your%20Paradise%20Centre%20Saddar%20shop."
+                  href={`https://wa.me/${settings.whatsapp}?text=Assalam%20o%20Alaikum%20${encodeURIComponent(settings.storeName)}!%20I%20am%20planning%20to%20visit%20your%20shop.`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="py-3 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold tracking-wider uppercase rounded transition-all flex items-center justify-center gap-2 shadow-sm cursor-pointer"
@@ -152,15 +153,15 @@ export const StoreLocation: React.FC = () => {
                 </div>
                 <div>
                   <p className="font-bold text-white">Direct Phone Order Line</p>
-                  <p className="text-[11px] text-neutral-400">Call during store hours (11:30 AM – 10:00 PM)</p>
+                  <p className="text-[11px] text-neutral-400">Call during store hours ({settings.timings})</p>
                 </div>
               </div>
 
               <a
-                href="tel:+923213979883"
+                href={`tel:${settings.phone.replace(/[^0-9+]/g, '')}`}
                 className="font-mono text-sm font-bold text-amber-300 hover:text-white px-3 py-1.5 bg-neutral-900 border border-neutral-700 rounded transition-colors"
               >
-                +92 321 3979883
+                {settings.phone}
               </a>
             </div>
           </div>

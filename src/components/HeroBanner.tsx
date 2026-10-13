@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useCart } from '../context/CartContext';
+import { useStoreSettings } from '../context/StoreSettingsContext';
 import { ShieldCheck, MapPin, ArrowRight, MessageCircle, ChevronLeft, ChevronRight, Truck, Sparkles } from 'lucide-react';
 
 interface BannerSlide {
@@ -45,6 +46,7 @@ const SLIDES: BannerSlide[] = [
 export const HeroBanner: React.FC = () => {
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
   const { setActiveSeries } = useCart();
+  const { settings } = useStoreSettings();
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -109,7 +111,7 @@ export const HeroBanner: React.FC = () => {
               </button>
 
               <a
-                href="https://wa.me/923213979883?text=Assalam%20o%20Alaikum%20New%20Madina%20Electronics,%20I%20am%20interested%20in%20genuine%20Casio%20watches."
+                href={`https://wa.me/${settings.whatsapp}?text=Assalam%20o%20Alaikum%20${encodeURIComponent(settings.storeName)},%20I%20am%20interested%20in%20genuine%20Casio%20watches.`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex-1 sm:flex-none px-5 py-3.5 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-semibold text-xs rounded transition-all flex items-center justify-center gap-2 shadow-sm"

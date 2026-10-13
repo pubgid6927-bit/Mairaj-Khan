@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useCart, formatPKR } from '../context/CartContext';
+import { useStoreSettings } from '../context/StoreSettingsContext';
 import { CustomerDetails, PaymentMethodType, Order } from '../types';
 import { 
   X, 
@@ -20,6 +21,7 @@ interface CheckoutModalProps {
 
 export const CheckoutModal: React.FC<CheckoutModalProps> = ({ onClose }) => {
   const { cart, cartTotal, clearCart, setCompletedOrder, addToast } = useCart();
+  const { settings } = useStoreSettings();
 
   const [customer, setCustomer] = useState<CustomerDetails>({
     fullName: '',
@@ -34,7 +36,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ onClose }) => {
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const deliveryFee = cartTotal === 0 ? 0 : 350;
+  const deliveryFee = cartTotal === 0 ? 0 : (settings.deliveryFee ?? 250);
   const grandTotal = cartTotal + deliveryFee;
 
   const handleCopy = (text: string, fieldName: string) => {

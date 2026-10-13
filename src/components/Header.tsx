@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useCart, formatPKR } from '../context/CartContext';
+import { useStoreSettings } from '../context/StoreSettingsContext';
 import { ALL_PRODUCTS } from '../data/products';
 import { UniqueLuxuryBagIcon } from './UniqueLuxuryBagIcon';
 import { 
@@ -22,6 +23,7 @@ import {
 import { AccountModal } from './AccountModal';
 
 export const Header: React.FC = () => {
+  const { settings } = useStoreSettings();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isSearchFocused, setIsSearchFocused] = useState(false);
@@ -32,9 +34,9 @@ export const Header: React.FC = () => {
   // Ticker announcement rotation
   const [tickerIndex, setTickerIndex] = useState(0);
   const tickerMessages = [
-    'EXPRESS COURIER DELIVERY ACROSS PAKISTAN · TCS & LEOPARDS NATIONWIDE',
+    settings.announcement,
     '100% GENUINE CASIO TIMEPIECES WITH OFFICIAL 1-YEAR STAMPED WARRANTY',
-    'VISIT OUR SADDAR KARACHI SHOWROOM · SHOP 141, PARADISE SHOPPING CENTRE',
+    `VISIT OUR SADDAR KARACHI SHOWROOM · ${settings.address.toUpperCase()}`,
     'ONLINE BANK TRANSFER, JAZZCASH & SADDAR SHOWROOM COLLECTION AVAILABLE'
   ];
 
@@ -138,11 +140,11 @@ export const Header: React.FC = () => {
             </a>
             <span className="text-neutral-700">|</span>
             <a
-              href="tel:+923213979883"
+              href={`tel:${settings.phone.replace(/[^0-9+]/g, '')}`}
               className="hover:text-amber-300 transition-colors font-mono font-bold text-white flex items-center gap-1"
             >
               <Phone className="w-3 h-3 text-amber-400" />
-              <span>+92 321 3979883</span>
+              <span>{settings.phone}</span>
             </a>
             <span className="text-neutral-700">|</span>
             <span className="font-mono text-amber-300 font-bold">PKR (Rs.)</span>
@@ -172,10 +174,10 @@ export const Header: React.FC = () => {
                 className="text-xs sm:text-base md:text-lg lg:text-[22px] font-bold tracking-[0.05em] sm:tracking-[0.08em] text-neutral-950 group-hover:text-amber-900 transition-colors uppercase whitespace-nowrap"
                 style={{ fontFamily: "'Cinzel', serif" }}
               >
-                New Madina Electronics
+                {settings.storeName}
               </span>
               <span className="hidden sm:block text-[8px] sm:text-[9px] tracking-[0.25em] text-neutral-400 uppercase font-sans font-medium -mt-0.5">
-                Official Casio Timepieces
+                {settings.tagline}
               </span>
             </a>
           </div>
