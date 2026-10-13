@@ -24,7 +24,7 @@ export const Footer: React.FC = () => {
     e.preventDefault();
     if (!emailInput.trim()) return;
     setIsSubscribed(true);
-    addToast('Thank you! You are now subscribed to New Madina Electronics boutique updates.');
+    addToast('Thank you! You are now subscribed to New Madina Electronics store updates.');
     setEmailInput('');
   };
 
@@ -47,7 +47,7 @@ export const Footer: React.FC = () => {
               className="text-base sm:text-xl font-bold tracking-[0.14em] uppercase text-white font-serif"
               style={{ fontFamily: "'Cinzel', serif" }}
             >
-              Subscribe to Our Boutique Journal
+              Subscribe to Our Store Journal
             </h3>
             <p className="text-neutral-400 text-xs">
               Be the first to discover new Casio Edifice, G-Shock, and Vintage arrivals with official stamped warranty in Pakistan.
@@ -166,7 +166,7 @@ export const Footer: React.FC = () => {
               <li>
                 <span className="text-neutral-400 flex items-center gap-1.5">
                   <ChevronRight className="w-3 h-3 text-neutral-600" />
-                  <span>Nationwide Cash on Delivery (COD)</span>
+                  <span>Express TCS & Leopards Delivery</span>
                 </span>
               </li>
             </ul>
@@ -220,9 +220,6 @@ export const Footer: React.FC = () => {
           <div className="flex flex-wrap items-center gap-2 text-xs text-neutral-400">
             <span className="font-bold text-white uppercase tracking-wider text-[11px] mr-2">Payment Methods:</span>
             <span className="px-2.5 py-1 bg-neutral-900 border border-neutral-700 rounded text-neutral-300 font-mono text-[11px]">
-              Cash on Delivery (COD)
-            </span>
-            <span className="px-2.5 py-1 bg-neutral-900 border border-neutral-700 rounded text-neutral-300 font-mono text-[11px]">
               Meezan Bank Direct
             </span>
             <span className="px-2.5 py-1 bg-neutral-900 border border-neutral-700 rounded text-neutral-300 font-mono text-[11px]">
@@ -256,7 +253,7 @@ export const Footer: React.FC = () => {
 
         {/* 4. Bottom Quiet Copyright Bar */}
         <div className="pt-6 border-t border-neutral-800/60 flex flex-col sm:flex-row items-center justify-between gap-4 text-[11px] text-neutral-500">
-          <p>© {new Date().getFullYear()} New Madina Electronics. All Rights Reserved. Authorized Casio Watch Boutique, Saddar Karachi, Pakistan.</p>
+          <p>© {new Date().getFullYear()} New Madina Electronics. All Rights Reserved. Authorized Casio Watch Store, Saddar Karachi, Pakistan.</p>
           <div className="flex items-center gap-4">
             <span>Genuine Casio Guarantee</span>
             <span>·</span>

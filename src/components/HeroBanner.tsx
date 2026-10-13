@@ -94,7 +94,7 @@ export const HeroBanner: React.FC = () => {
               <span className="font-medium text-neutral-900">Official 1-Year Warranty</span>
               <span aria-hidden="true" className="text-neutral-300">·</span>
               <span className="text-neutral-700 flex items-center gap-1.5">
-                <Truck className="w-3.5 h-3.5 text-neutral-500 shrink-0" /> Express COD Dispatch
+                <Truck className="w-3.5 h-3.5 text-neutral-500 shrink-0" /> Express Nationwide Courier
               </span>
             </div>
 
@@ -115,7 +115,7 @@ export const HeroBanner: React.FC = () => {
                 className="flex-1 sm:flex-none px-5 py-3.5 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-semibold text-xs rounded transition-all flex items-center justify-center gap-2 shadow-sm"
               >
                 <MessageCircle className="w-4 h-4" />
-                <span className="truncate">WhatsApp Boutique Inquiry</span>
+                <span className="truncate">WhatsApp Store Inquiry</span>
               </a>
 
               <a
@@ -189,7 +189,7 @@ export const HeroBanner: React.FC = () => {
         <div className="mt-8 pt-6 border-t border-neutral-200">
           <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar sm:grid sm:grid-cols-3 lg:grid-cols-6 sm:overflow-visible">
             {[
-              { label: 'All Watches', query: 'All', note: 'Full Boutique Catalog' },
+              { label: 'All Watches', query: 'All', note: 'Full Store Catalog' },
               { label: 'Casio Edifice', query: 'Casio Edifice', note: 'Motorsport Speed' },
               { label: 'Casio G-Shock', query: 'Casio G-Shock', note: 'Unbreakable 200M' },
               { label: 'Casio Vintage', query: 'Casio Vintage', note: 'Original 1980s Retro' },

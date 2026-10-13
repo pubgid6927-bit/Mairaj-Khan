@@ -33,7 +33,7 @@ export const MobileBottomBar: React.FC = () => {
           className="flex flex-col items-center justify-center gap-1 py-1 text-neutral-600 hover:text-neutral-950 active:scale-95 transition-transform cursor-pointer"
         >
           <Compass className="w-5 h-5 text-neutral-900" />
-          <span className="text-[10px] font-semibold tracking-tight uppercase">Boutique</span>
+          <span className="text-[10px] font-semibold tracking-tight uppercase">Store</span>
         </button>
 
         {/* 2. Series / Filter Tab */}

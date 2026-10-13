@@ -57,7 +57,7 @@ export interface CustomerDetails {
   deliveryNotes?: string;
 }
 
-export type PaymentMethodType = 'cod' | 'bank_transfer' | 'jazzcash_easypaisa' | 'whatsapp_order';
+export type PaymentMethodType = 'bank_transfer' | 'jazzcash_easypaisa' | 'whatsapp_order';
 
 export interface Order {
   orderId: string;

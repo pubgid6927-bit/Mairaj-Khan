@@ -30,7 +30,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ onClose }) => {
     deliveryNotes: ''
   });
 
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethodType>('cod');
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethodType>('bank_transfer');
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -247,35 +247,8 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ onClose }) => {
               <span>2. Select Payment System</span>
             </h4>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
-              {/* Option 1: COD */}
-              <label
-                onClick={() => setPaymentMethod('cod')}
-                className={`p-3 rounded-xl border cursor-pointer flex flex-col justify-between transition-all ${
-                  paymentMethod === 'cod'
-                    ? 'bg-slate-900 text-white border-slate-900 shadow-sm'
-                    : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
-                }`}
-              >
-                <div className="flex items-center justify-between mb-1.5">
-                  <div className="flex items-center gap-2 font-bold">
-                    <Banknote className={`w-4 h-4 ${paymentMethod === 'cod' ? 'text-amber-400' : 'text-emerald-600'}`} />
-                    <span>Cash on Delivery (COD)</span>
-                  </div>
-                  <input
-                    type="radio"
-                    name="payment"
-                    checked={paymentMethod === 'cod'}
-                    onChange={() => setPaymentMethod('cod')}
-                    className="accent-amber-500"
-                  />
-                </div>
-                <p className={`text-[11px] ${paymentMethod === 'cod' ? 'text-slate-300' : 'text-slate-500'}`}>
-                  Pay cash to TCS/Leopards rider upon delivery. Inspection allowed.
-                </p>
-              </label>
-
-              {/* Option 2: Bank Transfer */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
+              {/* Option 1: Bank Transfer */}
               <label
                 onClick={() => setPaymentMethod('bank_transfer')}
                 className={`p-3 rounded-xl border cursor-pointer flex flex-col justify-between transition-all ${
@@ -302,7 +275,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ onClose }) => {
                 </p>
               </label>
 
-              {/* Option 3: JazzCash / EasyPaisa */}
+              {/* Option 2: JazzCash / EasyPaisa */}
               <label
                 onClick={() => setPaymentMethod('jazzcash_easypaisa')}
                 className={`p-3 rounded-xl border cursor-pointer flex flex-col justify-between transition-all ${
@@ -329,7 +302,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ onClose }) => {
                 </p>
               </label>
 
-              {/* Option 4: Direct WhatsApp Confirmation */}
+              {/* Option 3: Direct WhatsApp Confirmation */}
               <label
                 onClick={() => setPaymentMethod('whatsapp_order')}
                 className={`p-3 rounded-xl border cursor-pointer flex flex-col justify-between transition-all ${
@@ -341,7 +314,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ onClose }) => {
                 <div className="flex items-center justify-between mb-1.5">
                   <div className="flex items-center gap-2 font-bold">
                     <MessageCircle className={`w-4 h-4 ${paymentMethod === 'whatsapp_order' ? 'text-emerald-400' : 'text-emerald-600'}`} />
-                    <span>WhatsApp Fast Dispatch</span>
+                    <span>WhatsApp Order</span>
                   </div>
                   <input
                     type="radio"
@@ -410,15 +383,6 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ onClose }) => {
                     <span className="text-slate-900 font-bold">New Madina Electronics / Muhammad Tariq</span>
                   </div>
                 </div>
-              </div>
-            )}
-
-            {paymentMethod === 'cod' && (
-              <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-xs flex items-start gap-2 text-emerald-800">
-                <Check className="w-4 h-4 shrink-0 mt-0.5 text-emerald-600" />
-                <span>
-                  Cash on Delivery confirmed. You will receive an automated phone call or WhatsApp message for dispatch confirmation before rider pickup.
-                </span>
               </div>
             )}
           </div>

@@ -9,13 +9,13 @@ export const StoreLocation: React.FC = () => {
         <div className="text-center max-w-2xl mx-auto space-y-3">
           <div className="inline-flex items-center justify-center gap-2 text-[10px] sm:text-xs font-bold uppercase tracking-[0.2em] text-neutral-500">
             <MapPin className="w-3.5 h-3.5 text-amber-700" />
-            <span>Saddar Karachi Boutique Destination</span>
+            <span>Saddar Karachi Store Destination</span>
           </div>
           <h2 
             className="text-2xl sm:text-4xl font-extrabold text-neutral-950 tracking-tight font-serif"
             style={{ fontFamily: "'Cinzel', serif" }}
           >
-            New Madina Electronics Boutique
+            New Madina Electronics Store
           </h2>
           <p className="text-xs sm:text-sm text-neutral-600">
             Visit our physical timepiece gallery at Paradise Shopping Centre, Saddar to inspect any Casio watch in person, verify caseback serial numbers, and receive complimentary strap adjustments.
@@ -34,7 +34,7 @@ export const StoreLocation: React.FC = () => {
                 </div>
                 <div>
                   <h3 className="font-bold text-neutral-950 text-base font-serif" style={{ fontFamily: "'Cinzel', serif" }}>
-                    Boutique Address
+                    Store Address
                   </h3>
                   <p className="text-xs sm:text-sm text-neutral-700 mt-1 leading-relaxed">
                     First Floor, Paradise Shopping Centre, Shop 141,<br />
@@ -117,7 +117,7 @@ export const StoreLocation: React.FC = () => {
             <div className="relative aspect-[16/10] rounded-lg overflow-hidden border border-neutral-200 shadow-lg bg-neutral-900 group">
               <img
                 src="/images/store_madina_boutique.jpg"
-                alt="New Madina Electronics Boutique Vitrine Paradise Shopping Centre Saddar"
+                alt="New Madina Electronics Store Vitrine Paradise Shopping Centre Saddar"
                 referrerPolicy="no-referrer"
                 className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                 onError={(e) => {
@@ -152,7 +152,7 @@ export const StoreLocation: React.FC = () => {
                 </div>
                 <div>
                   <p className="font-bold text-white">Direct Phone Order Line</p>
-                  <p className="text-[11px] text-neutral-400">Call during boutique hours (11:30 AM – 10:00 PM)</p>
+                  <p className="text-[11px] text-neutral-400">Call during store hours (11:30 AM – 10:00 PM)</p>
                 </div>
               </div>
 

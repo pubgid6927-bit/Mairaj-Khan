@@ -18,7 +18,7 @@ export const INITIAL_REVIEWS: CustomerReview[] = [
     watchPurchased: 'Casio G-Shock GA-2100-1A1 (CasiOak Stealth)',
     rating: 5,
     date: '08 September 2026',
-    comment: 'Ordered via Cash on Delivery to Lahore. Leopards courier arrived in 2 days. The carbon core guard and stealth matte finish is breathtaking. Authentic Japanese movement with stamped warranty card from New Madina Electronics.',
+    comment: 'Ordered via Online Bank Transfer to Lahore. Leopards courier arrived in 2 days. The carbon core guard and stealth matte finish is breathtaking. Authentic Japanese movement with stamped warranty card from New Madina Electronics.',
     verifiedPurchase: true
   },
   {

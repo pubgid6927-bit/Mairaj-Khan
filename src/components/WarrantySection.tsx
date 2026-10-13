@@ -44,7 +44,7 @@ export const WarrantySection: React.FC = () => {
               </li>
               <li className="flex items-center gap-2">
                 <Check className="w-3.5 h-3.5 text-emerald-600" />
-                <span>Direct boutique service at Paradise Centre Saddar</span>
+                <span>Direct store service at Paradise Centre Saddar</span>
               </li>
             </ul>
           </div>
@@ -78,10 +78,10 @@ export const WarrantySection: React.FC = () => {
               <FileText className="w-6 h-6" />
             </div>
             <h3 className="font-bold text-neutral-950 text-base font-serif" style={{ fontFamily: "'Cinzel', serif" }}>
-              Karachi Store & Nationwide COD
+              Karachi Store & Express Delivery
             </h3>
             <p className="text-xs text-neutral-600 leading-relaxed">
-              Visit our physical watch showroom at Paradise Shopping Centre, Saddar Karachi for personalized sizing and live inspection, or order online with express nationwide Cash on Delivery across Pakistan.
+              Visit our physical watch showroom at Paradise Shopping Centre, Saddar Karachi for personalized sizing and live inspection, or order online with express nationwide insured courier delivery across Pakistan.
             </p>
             <ul className="text-xs text-neutral-700 space-y-2 pt-3 border-t border-neutral-200/80">
               <li className="flex items-center gap-2">
