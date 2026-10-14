@@ -1,19 +1,52 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { WatchProduct } from '../types';
 
-// Retrieve credentials from Vite environment or localStorage for flexible setup
+// Clean the supabaseUrl string before passing it to createClient:
+// - Removes trailing slashes
+// - Ensures NO extra paths like /rest/v1 or /db are appended to the base domain URL
+export const cleanSupabaseUrl = (rawUrl?: string | null): string => {
+  if (!rawUrl) return '';
+  return rawUrl
+    .trim()
+    .replace(/\/+$|\/rest\/v1.*$|\/db.*$/g, '')
+    .replace(/\/+$/, '');
+};
+
+// Strict environment variable resolution per specifications
+const rawEnvUrl = import.meta.env.VITE_SUPABASE_URL?.trim().replace(/\/+$|\/rest\/v1.*$/g, '');
+const rawEnvKey = import.meta.env.VITE_SUPABASE_ANON_KEY?.trim();
+
+// LocalStorage stored fallback for in-browser setup
+const getStoredUrl = (): string => {
+  if (typeof window === 'undefined') return '';
+  return cleanSupabaseUrl(localStorage.getItem('nme_supabase_url'));
+};
+
+const getStoredKey = (): string => {
+  if (typeof window === 'undefined') return '';
+  return (localStorage.getItem('nme_supabase_anon_key')?.trim() || '');
+};
+
+// Clean, base domain Supabase URL (no trailing slash, no /rest/v1 suffix)
+export const supabaseUrl: string = (rawEnvUrl && !rawEnvUrl.includes('your-project-id'))
+  ? cleanSupabaseUrl(rawEnvUrl)
+  : (getStoredUrl() || 'https://placeholder.supabase.co');
+
+export const supabaseAnonKey: string = (rawEnvKey && !rawEnvKey.includes('your-supabase-anon'))
+  ? rawEnvKey
+  : (getStoredKey() || 'placeholder-anon-key');
+
+// Supabase client instance strictly initialized with sanitized base domain URL
+export const supabase: SupabaseClient = createClient(supabaseUrl, supabaseAnonKey);
+
 export const getSupabaseUrl = (): string => {
-  const envUrl = import.meta.env.VITE_SUPABASE_URL || '';
-  if (envUrl && !envUrl.includes('your-project-id')) return envUrl.trim();
-  const stored = typeof window !== 'undefined' ? localStorage.getItem('nme_supabase_url') : null;
-  return (stored || '').trim();
+  if (rawEnvUrl && !rawEnvUrl.includes('your-project-id')) return cleanSupabaseUrl(rawEnvUrl);
+  return getStoredUrl();
 };
 
 export const getSupabaseAnonKey = (): string => {
-  const envKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
-  if (envKey && !envKey.includes('your-supabase-anon')) return envKey.trim();
-  const stored = typeof window !== 'undefined' ? localStorage.getItem('nme_supabase_anon_key') : null;
-  return (stored || '').trim();
+  if (rawEnvKey && !rawEnvKey.includes('your-supabase-anon')) return rawEnvKey;
+  return getStoredKey();
 };
 
 export const isSupabaseConfigured = (): boolean => {
@@ -22,52 +55,51 @@ export const isSupabaseConfigured = (): boolean => {
   return Boolean(
     url && 
     key && 
+    !url.includes('placeholder') &&
     !url.includes('your-project-id') &&
+    !key.includes('placeholder') &&
     !key.includes('your-supabase-anon')
   );
 };
 
-let cachedClient: SupabaseClient | null = null;
-let lastUrl = '';
-let lastKey = '';
+let dynamicClient: SupabaseClient | null = null;
+let currentDynamicUrl = '';
+let currentDynamicKey = '';
 
-export const getSupabaseClient = (): SupabaseClient | null => {
-  const url = getSupabaseUrl();
+export const getSupabaseClient = (): SupabaseClient => {
+  const url = cleanSupabaseUrl(getSupabaseUrl());
   const key = getSupabaseAnonKey();
 
   if (!isSupabaseConfigured()) {
-    cachedClient = null;
-    return null;
+    return supabase;
   }
 
-  if (cachedClient && lastUrl === url && lastKey === key) {
-    return cachedClient;
+  if (!dynamicClient || currentDynamicUrl !== url || currentDynamicKey !== key) {
+    try {
+      dynamicClient = createClient(url, key, {
+        auth: {
+          persistSession: true,
+          autoRefreshToken: true
+        }
+      });
+      currentDynamicUrl = url;
+      currentDynamicKey = key;
+    } catch (err) {
+      console.error('Failed to initialize Supabase client:', err);
+      return supabase;
+    }
   }
 
-  try {
-    cachedClient = createClient(url, key, {
-      auth: {
-        persistSession: true,
-        autoRefreshToken: true
-      }
-    });
-    lastUrl = url;
-    lastKey = key;
-    return cachedClient;
-  } catch (err) {
-    console.error('Failed to initialize Supabase client:', err);
-    return null;
-  }
+  return dynamicClient;
 };
 
-export const supabase = getSupabaseClient();
-
-// Save Supabase credentials directly from Admin UI
+// Save Supabase credentials directly from Admin UI (auto-cleaned)
 export const saveSupabaseCredentials = (url: string, key: string) => {
   if (typeof window !== 'undefined') {
-    localStorage.setItem('nme_supabase_url', url.trim());
+    const cleaned = cleanSupabaseUrl(url);
+    localStorage.setItem('nme_supabase_url', cleaned);
     localStorage.setItem('nme_supabase_anon_key', key.trim());
-    cachedClient = null; // force client refresh
+    dynamicClient = null; // force reload with new cleaned URL
   }
 };
 
@@ -75,7 +107,7 @@ export const clearSupabaseCredentials = () => {
   if (typeof window !== 'undefined') {
     localStorage.removeItem('nme_supabase_url');
     localStorage.removeItem('nme_supabase_anon_key');
-    cachedClient = null;
+    dynamicClient = null;
   }
 };
 

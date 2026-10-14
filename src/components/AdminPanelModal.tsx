@@ -36,6 +36,7 @@ import {
   isSupabaseConfigured, 
   getSupabaseUrl,
   getSupabaseAnonKey,
+  cleanSupabaseUrl,
   saveSupabaseCredentials,
   testSupabaseConnection,
   insertProductIntoSupabase,
@@ -565,8 +566,10 @@ CREATE POLICY "Allow public modify site_settings" ON public.site_settings FOR AL
       alert('Please enter both Supabase URL and Anon Key');
       return;
     }
-    saveSupabaseCredentials(supabaseUrlInput, supabaseKeyInput);
-    addToast('Supabase credentials saved! Testing connection...');
+    const cleanedUrl = cleanSupabaseUrl(supabaseUrlInput);
+    setSupabaseUrlInput(cleanedUrl);
+    saveSupabaseCredentials(cleanedUrl, supabaseKeyInput);
+    addToast('Supabase credentials saved (sanitized base URL)! Testing connection...');
     await handleTestSupabaseConnection();
     const live = await fetchProductsFromSupabase();
     onProductsUpdated(live);
