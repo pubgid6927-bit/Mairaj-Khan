@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useCart, formatPKR } from '../context/CartContext';
 import { useStoreSettings } from '../context/StoreSettingsContext';
-import { ALL_PRODUCTS } from '../data/products';
 import { UniqueLuxuryBagIcon } from './UniqueLuxuryBagIcon';
 import { 
   Heart, 
@@ -48,6 +47,7 @@ export const Header: React.FC = () => {
   }, [tickerMessages.length]);
 
   const { 
+    products,
     cartItemsCount, 
     cartTotal, 
     setIsCartOpen, 
@@ -70,16 +70,16 @@ export const Header: React.FC = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Instant Live Search Results (LifeStyle Collection Style)
+  // Instant Live Search Results directly from live Supabase products
   const liveSearchResults = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
     if (!q) return [];
-    return ALL_PRODUCTS.filter((p) => 
+    return products.filter((p) => 
       p.model.toLowerCase().includes(q) ||
       p.name.toLowerCase().includes(q) ||
       p.series.toLowerCase().includes(q)
     );
-  }, [searchQuery]);
+  }, [searchQuery, products]);
 
   // Scroll detection to elevate sticky main header
   const [isScrolled, setIsScrolled] = useState(false);

@@ -1,40 +1,102 @@
-import { createClient } from '@supabase/supabase-js';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { WatchProduct } from '../types';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
+// Retrieve credentials from Vite environment or localStorage for flexible setup
+export const getSupabaseUrl = (): string => {
+  const envUrl = import.meta.env.VITE_SUPABASE_URL || '';
+  if (envUrl && !envUrl.includes('your-project-id')) return envUrl.trim();
+  const stored = typeof window !== 'undefined' ? localStorage.getItem('nme_supabase_url') : null;
+  return (stored || '').trim();
+};
+
+export const getSupabaseAnonKey = (): string => {
+  const envKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
+  if (envKey && !envKey.includes('your-supabase-anon')) return envKey.trim();
+  const stored = typeof window !== 'undefined' ? localStorage.getItem('nme_supabase_anon_key') : null;
+  return (stored || '').trim();
+};
 
 export const isSupabaseConfigured = (): boolean => {
+  const url = getSupabaseUrl();
+  const key = getSupabaseAnonKey();
   return Boolean(
-    supabaseUrl && 
-    supabaseAnonKey && 
-    !supabaseUrl.includes('your-project-id') &&
-    !supabaseAnonKey.includes('your-supabase-anon')
+    url && 
+    key && 
+    !url.includes('your-project-id') &&
+    !key.includes('your-supabase-anon')
   );
 };
 
-export const supabase = isSupabaseConfigured()
-  ? createClient(supabaseUrl, supabaseAnonKey)
-  : null;
+let cachedClient: SupabaseClient | null = null;
+let lastUrl = '';
+let lastKey = '';
+
+export const getSupabaseClient = (): SupabaseClient | null => {
+  const url = getSupabaseUrl();
+  const key = getSupabaseAnonKey();
+
+  if (!isSupabaseConfigured()) {
+    cachedClient = null;
+    return null;
+  }
+
+  if (cachedClient && lastUrl === url && lastKey === key) {
+    return cachedClient;
+  }
+
+  try {
+    cachedClient = createClient(url, key, {
+      auth: {
+        persistSession: true,
+        autoRefreshToken: true
+      }
+    });
+    lastUrl = url;
+    lastKey = key;
+    return cachedClient;
+  } catch (err) {
+    console.error('Failed to initialize Supabase client:', err);
+    return null;
+  }
+};
+
+export const supabase = getSupabaseClient();
+
+// Save Supabase credentials directly from Admin UI
+export const saveSupabaseCredentials = (url: string, key: string) => {
+  if (typeof window !== 'undefined') {
+    localStorage.setItem('nme_supabase_url', url.trim());
+    localStorage.setItem('nme_supabase_anon_key', key.trim());
+    cachedClient = null; // force client refresh
+  }
+};
+
+export const clearSupabaseCredentials = () => {
+  if (typeof window !== 'undefined') {
+    localStorage.removeItem('nme_supabase_url');
+    localStorage.removeItem('nme_supabase_anon_key');
+    cachedClient = null;
+  }
+};
 
 // Convert Supabase DB record to WatchProduct
 export const mapDbProductToWatch = (row: any): WatchProduct => {
   return {
-    id: row.id,
-    model: row.model,
+    id: String(row.id),
+    model: String(row.model || ''),
     series: row.series,
     gender: row.gender || 'Men',
-    name: row.name,
-    pricePKR: Number(row.price_pkr),
+    name: String(row.name || ''),
+    pricePKR: Number(row.price_pkr) || 0,
     originalPricePKR: row.original_price_pkr ? Number(row.original_price_pkr) : undefined,
     inStock: row.is_in_stock !== false,
-    stockCount: row.stock_count || 10,
+    stockCount: typeof row.stock_count === 'number' ? row.stock_count : 10,
     isFeatured: Boolean(row.is_featured),
     isBestSeller: Boolean(row.is_best_seller),
     isNewArrival: Boolean(row.is_new_arrival),
     rating: Number(row.rating || 4.9),
     reviewsCount: Number(row.reviews_count || 18),
-    imageUrl: row.image_url,
+    imageUrl: row.image_url || 'https://watchcentre.pk/wp-content/uploads/2023/04/casio-mtp-1302d-2a2v-tiffany-blue-dial-watch.jpg',
     alternateImageUrl: row.alternate_image_url || undefined,
     description: row.description || '',
     specs: row.specs || {
@@ -48,7 +110,9 @@ export const mapDbProductToWatch = (row: any): WatchProduct => {
       weight: '110g',
       warranty: '1 Year Official'
     },
-    features: row.features || ['Genuine Casio Movement', 'Water Resistant']
+    features: Array.isArray(row.features) && row.features.length > 0 
+      ? row.features 
+      : ['Genuine Casio Movement', 'Water Resistant']
   };
 };
 
@@ -60,36 +124,48 @@ export const mapWatchToDbProduct = (watch: WatchProduct) => {
     series: watch.series,
     gender: watch.gender,
     name: watch.name,
-    price_pkr: watch.pricePKR,
-    original_price_pkr: watch.originalPricePKR || null,
-    stock_count: watch.stockCount || 10,
+    price_pkr: Number(watch.pricePKR),
+    original_price_pkr: watch.originalPricePKR ? Number(watch.originalPricePKR) : null,
+    stock_count: typeof watch.stockCount === 'number' ? watch.stockCount : 10,
     image_url: watch.imageUrl,
     alternate_image_url: watch.alternateImageUrl || null,
-    description: watch.description,
+    description: watch.description || '',
     is_featured: Boolean(watch.isFeatured),
     is_best_seller: Boolean(watch.isBestSeller),
     is_new_arrival: Boolean(watch.isNewArrival),
-    is_in_stock: watch.inStock,
-    rating: watch.rating,
-    reviews_count: watch.reviewsCount,
-    specs: watch.specs,
-    features: watch.features,
+    is_in_stock: Boolean(watch.inStock),
+    rating: Number(watch.rating || 4.9),
+    reviews_count: Number(watch.reviewsCount || 18),
+    specs: watch.specs || {},
+    features: watch.features || [],
     updated_at: new Date().toISOString()
   };
 };
 
-// Fetch live products from Supabase
-export const fetchProductsFromSupabase = async (): Promise<WatchProduct[] | null> => {
-  if (!supabase) return null;
+// Fetch ALL live products directly from Supabase (No pagination limits, no mock fallback)
+export const fetchProductsFromSupabase = async (): Promise<WatchProduct[]> => {
+  const client = getSupabaseClient();
+  if (!client) {
+    console.info('Supabase client not configured');
+    return [];
+  }
+
   try {
-    const { data, error } = await supabase
+    // Attempt query ordered by created_at descending (newest watches first)
+    const { data, error } = await client
       .from('products')
       .select('*')
       .order('created_at', { ascending: false });
 
     if (error) {
-      console.warn('Error fetching products from Supabase:', error.message);
-      return null;
+      console.warn('Query with created_at order failed, retrying without order:', error.message);
+      // Fallback query if created_at column is not present
+      const fallbackQuery = await client.from('products').select('*');
+      if (fallbackQuery.error) {
+        console.error('Supabase products fetch failed:', fallbackQuery.error.message);
+        return [];
+      }
+      return (fallbackQuery.data || []).map(mapDbProductToWatch);
     }
 
     if (!data || data.length === 0) {
@@ -97,20 +173,93 @@ export const fetchProductsFromSupabase = async (): Promise<WatchProduct[] | null
     }
 
     return data.map(mapDbProductToWatch);
-  } catch (err) {
-    console.warn('Supabase fetch failed:', err);
-    return null;
+  } catch (err: any) {
+    console.error('Supabase fetch failed:', err);
+    return [];
   }
 };
 
-// Insert or update product in Supabase
-export const upsertProductInSupabase = async (product: WatchProduct): Promise<{ success: boolean; error?: string }> => {
-  if (!supabase) {
+// Explicit clean INSERT query into Supabase 'products' table
+export const insertProductIntoSupabase = async (
+  product: WatchProduct
+): Promise<{ success: boolean; data?: WatchProduct; error?: string }> => {
+  const client = getSupabaseClient();
+  if (!client) {
+    return { success: false, error: 'Supabase is not configured. Please enter your Supabase URL & Anon Key.' };
+  }
+
+  try {
+    const payload = {
+      ...mapWatchToDbProduct(product),
+      created_at: new Date().toISOString()
+    };
+
+    const { data, error } = await client
+      .from('products')
+      .insert([payload])
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Supabase INSERT error:', error);
+      return { success: false, error: error.message };
+    }
+
+    return { 
+      success: true, 
+      data: data ? mapDbProductToWatch(data) : product 
+    };
+  } catch (err: any) {
+    console.error('insertProductIntoSupabase exception:', err);
+    return { success: false, error: err.message || 'Failed to insert watch into Supabase' };
+  }
+};
+
+// Explicit clean UPDATE query into Supabase 'products' table
+export const updateProductInSupabase = async (
+  product: WatchProduct
+): Promise<{ success: boolean; data?: WatchProduct; error?: string }> => {
+  const client = getSupabaseClient();
+  if (!client) {
+    return { success: false, error: 'Supabase is not configured.' };
+  }
+
+  try {
+    const payload = mapWatchToDbProduct(product);
+
+    const { data, error } = await client
+      .from('products')
+      .update(payload)
+      .eq('id', product.id)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Supabase UPDATE error:', error);
+      return { success: false, error: error.message };
+    }
+
+    return { 
+      success: true, 
+      data: data ? mapDbProductToWatch(data) : product 
+    };
+  } catch (err: any) {
+    console.error('updateProductInSupabase exception:', err);
+    return { success: false, error: err.message || 'Failed to update watch in Supabase' };
+  }
+};
+
+// Insert or update (upsert) product in Supabase
+export const upsertProductInSupabase = async (
+  product: WatchProduct
+): Promise<{ success: boolean; error?: string }> => {
+  const client = getSupabaseClient();
+  if (!client) {
     return { success: false, error: 'Supabase is not configured' };
   }
   try {
     const payload = mapWatchToDbProduct(product);
-    const { error } = await supabase.from('products').upsert(payload, { onConflict: 'id' });
+    const { error } = await client.from('products').upsert(payload, { onConflict: 'id' });
     if (error) throw error;
     return { success: true };
   } catch (err: any) {
@@ -118,17 +267,51 @@ export const upsertProductInSupabase = async (product: WatchProduct): Promise<{ 
   }
 };
 
-// Delete product in Supabase
-export const deleteProductInSupabase = async (id: string): Promise<{ success: boolean; error?: string }> => {
-  if (!supabase) {
+// Delete product from Supabase
+export const deleteProductInSupabase = async (
+  id: string
+): Promise<{ success: boolean; error?: string }> => {
+  const client = getSupabaseClient();
+  if (!client) {
     return { success: false, error: 'Supabase is not configured' };
   }
   try {
-    const { error } = await supabase.from('products').delete().eq('id', id);
+    const { error } = await client.from('products').delete().eq('id', id);
     if (error) throw error;
     return { success: true };
   } catch (err: any) {
     return { success: false, error: err.message || 'Failed to delete product' };
+  }
+};
+
+// Test Supabase Connection & Table check
+export const testSupabaseConnection = async (): Promise<{
+  connected: boolean;
+  count: number;
+  message: string;
+}> => {
+  const client = getSupabaseClient();
+  if (!client) {
+    return { connected: false, count: 0, message: 'Missing Supabase URL or Anon Public Key.' };
+  }
+  try {
+    const { data, error, count } = await client
+      .from('products')
+      .select('id', { count: 'exact', head: false })
+      .limit(5);
+
+    if (error) {
+      return { connected: false, count: 0, message: `Database error: ${error.message}` };
+    }
+
+    const totalCount = count !== null && count !== undefined ? count : (data ? data.length : 0);
+    return { 
+      connected: true, 
+      count: totalCount, 
+      message: `Connection successful! Found ${totalCount} watches in 'products' table.` 
+    };
+  } catch (err: any) {
+    return { connected: false, count: 0, message: `Network error: ${err.message || 'Connection failed'}` };
   }
 };
 
@@ -153,13 +336,13 @@ export const saveOrderInSupabase = async (orderData: {
     quantity: number;
   }>;
 }): Promise<{ success: boolean; error?: string }> => {
-  if (!supabase) {
-    // If Supabase is not connected, silently succeed for local frontend flow
-    return { success: true };
+  const client = getSupabaseClient();
+  if (!client) {
+    return { success: true }; // offline fallback
   }
   try {
-    const { error } = await supabase.from('orders').insert({
-      id: `ord_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`,
+    const payload = {
+      id: `ord_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
       order_number: orderData.orderNumber,
       customer_name: orderData.customer.fullName,
       phone: orderData.customer.phone,
@@ -169,39 +352,47 @@ export const saveOrderInSupabase = async (orderData: {
       payment_method: orderData.paymentMethod,
       total_pkr: orderData.totalPKR,
       items: orderData.items,
-      order_notes: orderData.customer.deliveryNotes || '',
-      status: 'Pending'
-    });
+      order_notes: orderData.customer.deliveryNotes || null,
+      status: 'Pending Verification',
+      created_at: new Date().toISOString()
+    };
 
+    const { error } = await client.from('orders').insert([payload]);
     if (error) throw error;
     return { success: true };
   } catch (err: any) {
-    console.warn('Failed to save order to Supabase:', err);
+    console.warn('Failed to save order to Supabase:', err.message);
     return { success: false, error: err.message };
   }
 };
 
-// Fetch orders for Admin Panel
-export const fetchOrdersFromSupabase = async () => {
-  if (!supabase) return [];
+// Fetch customer orders from Supabase (for Admin Panel)
+export const fetchOrdersFromSupabase = async (): Promise<any[]> => {
+  const client = getSupabaseClient();
+  if (!client) return [];
   try {
-    const { data, error } = await supabase
+    const { data, error } = await client
       .from('orders')
       .select('*')
       .order('created_at', { ascending: false });
-    if (error) throw error;
+
+    if (error) {
+      console.warn('Error fetching orders:', error.message);
+      return [];
+    }
     return data || [];
   } catch (err) {
-    console.warn('Error fetching orders:', err);
+    console.warn('Failed to fetch orders:', err);
     return [];
   }
 };
 
 // Update order status in Supabase
 export const updateOrderStatusInSupabase = async (orderId: string, status: string) => {
-  if (!supabase) return false;
+  const client = getSupabaseClient();
+  if (!client) return false;
   try {
-    const { error } = await supabase
+    const { error } = await client
       .from('orders')
       .update({ status })
       .eq('id', orderId);
@@ -213,20 +404,24 @@ export const updateOrderStatusInSupabase = async (orderId: string, status: strin
   }
 };
 
-// Seed initial watches in bulk to Supabase
+// Bulk seed starter watches to Supabase
 export const bulkSeedProductsToSupabase = async (
   products: WatchProduct[], 
   onProgress?: (count: number, total: number) => void
 ): Promise<{ success: boolean; count: number; error?: string }> => {
-  if (!supabase) return { success: false, count: 0, error: 'Supabase is not configured' };
+  const client = getSupabaseClient();
+  if (!client) return { success: false, count: 0, error: 'Supabase is not configured' };
 
   try {
     const batchSize = 25;
     let uploadedCount = 0;
 
     for (let i = 0; i < products.length; i += batchSize) {
-      const batch = products.slice(i, i + batchSize).map(mapWatchToDbProduct);
-      const { error } = await supabase.from('products').upsert(batch, { onConflict: 'id' });
+      const batch = products.slice(i, i + batchSize).map((p) => ({
+        ...mapWatchToDbProduct(p),
+        created_at: new Date().toISOString()
+      }));
+      const { error } = await client.from('products').upsert(batch, { onConflict: 'id' });
       if (error) throw error;
 
       uploadedCount += batch.length;
@@ -259,52 +454,45 @@ export const DEFAULT_SITE_SETTINGS: SiteSettings = {
   phone: '+92 321 3979883',
   whatsapp: '923213979883',
   address: 'Shop 141, 1st Floor, Paradise Shopping Centre, Saddar, Karachi',
-  timings: '11:30 AM – 10:00 PM (Mon-Sat)',
-  announcement: '100% Genuine Casio Timepieces with Serialized Warranty · Saddar Karachi',
-  deliveryFee: 250
+  timings: '11:30 AM – 10:00 PM (Mon – Sat)',
+  announcement: '100% ORIGINAL CASIO TIMEPIECES WITH OFFICIAL 1-YEAR NEW MADINA ELECTRONICS KARACHI STAMPED WARRANTY',
+  deliveryFee: 0
 };
 
 // Fetch site settings from Supabase
 export const fetchSiteSettingsFromSupabase = async (): Promise<SiteSettings | null> => {
-  if (!supabase) return null;
+  const client = getSupabaseClient();
+  if (!client) return null;
   try {
-    const { data, error } = await supabase
+    const { data, error } = await client
       .from('site_settings')
       .select('value')
       .eq('key', 'store_info')
-      .maybeSingle();
+      .single();
 
-    if (error) {
-      console.warn('Error fetching site settings from Supabase:', error.message);
-      return null;
-    }
+    if (error || !data || !data.value) return null;
 
-    if (data && data.value) {
-      return {
-        storeName: data.value.store_name || DEFAULT_SITE_SETTINGS.storeName,
-        tagline: data.value.tagline || DEFAULT_SITE_SETTINGS.tagline,
-        phone: data.value.phone || DEFAULT_SITE_SETTINGS.phone,
-        whatsapp: data.value.whatsapp || DEFAULT_SITE_SETTINGS.whatsapp,
-        address: data.value.address || DEFAULT_SITE_SETTINGS.address,
-        timings: data.value.timings || DEFAULT_SITE_SETTINGS.timings,
-        announcement: data.value.announcement || DEFAULT_SITE_SETTINGS.announcement,
-        deliveryFee: Number(data.value.delivery_fee ?? DEFAULT_SITE_SETTINGS.deliveryFee)
-      };
-    }
-    return null;
+    const v = data.value;
+    return {
+      storeName: v.store_name || DEFAULT_SITE_SETTINGS.storeName,
+      tagline: v.tagline || DEFAULT_SITE_SETTINGS.tagline,
+      phone: v.phone || DEFAULT_SITE_SETTINGS.phone,
+      whatsapp: v.whatsapp || DEFAULT_SITE_SETTINGS.whatsapp,
+      address: v.address || DEFAULT_SITE_SETTINGS.address,
+      timings: v.timings || DEFAULT_SITE_SETTINGS.timings,
+      announcement: v.announcement || DEFAULT_SITE_SETTINGS.announcement,
+      deliveryFee: typeof v.delivery_fee === 'number' ? v.delivery_fee : DEFAULT_SITE_SETTINGS.deliveryFee
+    };
   } catch (err) {
-    console.warn('Supabase site_settings fetch error:', err);
+    console.warn('Failed to fetch site settings from Supabase:', err);
     return null;
   }
 };
 
 // Save site settings in Supabase
-export const saveSiteSettingsInSupabase = async (
-  settings: SiteSettings
-): Promise<{ success: boolean; error?: string }> => {
-  if (!supabase) {
-    return { success: false, error: 'Supabase is not configured' };
-  }
+export const saveSiteSettingsInSupabase = async (settings: SiteSettings): Promise<boolean> => {
+  const client = getSupabaseClient();
+  if (!client) return false;
   try {
     const payload = {
       key: 'store_info',
@@ -321,14 +509,14 @@ export const saveSiteSettingsInSupabase = async (
       updated_at: new Date().toISOString()
     };
 
-    const { error } = await supabase
+    const { error } = await client
       .from('site_settings')
       .upsert(payload, { onConflict: 'key' });
 
     if (error) throw error;
-    return { success: true };
-  } catch (err: any) {
-    console.warn('Error saving site settings:', err);
-    return { success: false, error: err.message || 'Failed to save settings' };
+    return true;
+  } catch (err) {
+    console.warn('Failed to save site settings to Supabase:', err);
+    return false;
   }
 };

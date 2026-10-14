@@ -34,12 +34,19 @@ import {
 } from 'lucide-react';
 import { 
   isSupabaseConfigured, 
-  upsertProductInSupabase, 
+  getSupabaseUrl,
+  getSupabaseAnonKey,
+  saveSupabaseCredentials,
+  testSupabaseConnection,
+  insertProductIntoSupabase,
+  updateProductInSupabase,
   deleteProductInSupabase, 
+  fetchProductsFromSupabase,
   fetchOrdersFromSupabase, 
   updateOrderStatusInSupabase,
   bulkSeedProductsToSupabase
 } from '../lib/supabase';
+import { CASIO_STARTER_MODELS } from '../data/starterCatalog';
 
 interface AdminPanelModalProps {
   isOpen: boolean;
@@ -126,6 +133,17 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
   const [isSavingSettings, setIsSavingSettings] = useState(false);
   const [copySuccess, setCopySuccess] = useState(false);
 
+  // Direct Supabase Credentials input state
+  const [supabaseUrlInput, setSupabaseUrlInput] = useState(getSupabaseUrl());
+  const [supabaseKeyInput, setSupabaseKeyInput] = useState(getSupabaseAnonKey());
+  const [testConnectionStatus, setTestConnectionStatus] = useState<{
+    testing: boolean;
+    message: string;
+    connected?: boolean;
+    count?: number;
+  }>({ testing: false, message: '' });
+  const [isSeedingStarter, setIsSeedingStarter] = useState(false);
+
   // Sync settings inputs when settings update
   useEffect(() => {
     setStoreNameInput(settings.storeName);
@@ -187,11 +205,14 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
     };
 
     if (isConnected) {
-      await upsertProductInSupabase(updated);
+      await updateProductInSupabase(updated);
+      const freshList = await fetchProductsFromSupabase();
+      onProductsUpdated(freshList);
+    } else {
+      const newList = products.map((item) => (item.id === p.id ? updated : item));
+      onProductsUpdated(newList);
     }
 
-    const newList = products.map((item) => (item.id === p.id ? updated : item));
-    onProductsUpdated(newList);
     addToast(`${p.model} marked as ${updated.inStock ? 'In Stock' : 'Out of Stock'}`);
   };
 
@@ -340,25 +361,45 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
       features: parsedFeatures.length > 0 ? parsedFeatures : ['Genuine Casio Japanese Movement', formWaterResistance, formBand]
     };
 
-    // Save to Supabase if connected
+    // Save to Supabase (Clean INSERT for new watch, clean UPDATE for existing)
     if (isConnected) {
-      const res = await upsertProductInSupabase(updatedProduct);
-      if (!res.success) {
-        addToast(`Supabase: ${res.error || 'Saved locally'}`);
+      if (isCreatingNew) {
+        // Clean INSERT query into Supabase 'products' table
+        const res = await insertProductIntoSupabase(updatedProduct);
+        if (!res.success) {
+          alert(`Supabase INSERT Failed:\n${res.error}\n\nPlease check your Supabase schema and make sure the 'products' table exists.`);
+          addToast(`INSERT failed: ${res.error}`, 'error');
+          setIsSavingProduct(false);
+          return;
+        }
+        addToast(`✅ Added new watch to Supabase: ${updatedProduct.model}`, 'success');
+      } else {
+        // Clean UPDATE query into Supabase 'products' table
+        const res = await updateProductInSupabase(updatedProduct);
+        if (!res.success) {
+          alert(`Supabase UPDATE Failed:\n${res.error}`);
+          addToast(`UPDATE failed: ${res.error}`, 'error');
+          setIsSavingProduct(false);
+          return;
+        }
+        addToast(`✅ Updated watch in Supabase: ${updatedProduct.model}`, 'success');
       }
-    }
 
-    // Update state in app
-    let newList: WatchProduct[];
-    if (isCreatingNew) {
-      newList = [updatedProduct, ...products];
-      addToast(`Added new model: ${updatedProduct.model}`);
+      // Re-fetch all records directly from Supabase (Zero mock data, 100% live consistency)
+      const freshList = await fetchProductsFromSupabase();
+      onProductsUpdated(freshList);
     } else {
-      newList = products.map((p) => (p.id === updatedProduct.id ? updatedProduct : p));
-      addToast(`Updated watch: ${updatedProduct.model}`);
+      let newList: WatchProduct[];
+      if (isCreatingNew) {
+        newList = [updatedProduct, ...products];
+        addToast(`Added new model: ${updatedProduct.model}`);
+      } else {
+        newList = products.map((p) => (p.id === updatedProduct.id ? updatedProduct : p));
+        addToast(`Updated watch: ${updatedProduct.model}`);
+      }
+      onProductsUpdated(newList);
     }
 
-    onProductsUpdated(newList);
     setIsSavingProduct(false);
     setEditingProduct(null);
     setIsCreatingNew(false);
@@ -369,11 +410,19 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
     if (!window.confirm(`Are you sure you want to permanently delete ${p.model}?`)) return;
 
     if (isConnected) {
-      await deleteProductInSupabase(p.id);
+      const res = await deleteProductInSupabase(p.id);
+      if (!res.success) {
+        alert(`Delete failed in Supabase: ${res.error}`);
+        addToast(`Delete error: ${res.error}`, 'error');
+        return;
+      }
+      const freshList = await fetchProductsFromSupabase();
+      onProductsUpdated(freshList);
+    } else {
+      const newList = products.filter((item) => item.id !== p.id);
+      onProductsUpdated(newList);
     }
 
-    const newList = products.filter((item) => item.id !== p.id);
-    onProductsUpdated(newList);
     addToast(`Deleted ${p.model}`);
   };
 
@@ -507,6 +556,61 @@ CREATE POLICY "Allow public modify site_settings" ON public.site_settings FOR AL
       setTimeout(() => setCopySuccess(false), 2500);
       addToast('SQL Script copied to clipboard!');
     });
+  };
+
+  // Save Supabase credentials directly from UI
+  const handleSaveSupabaseCreds = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!supabaseUrlInput.trim() || !supabaseKeyInput.trim()) {
+      alert('Please enter both Supabase URL and Anon Key');
+      return;
+    }
+    saveSupabaseCredentials(supabaseUrlInput, supabaseKeyInput);
+    addToast('Supabase credentials saved! Testing connection...');
+    await handleTestSupabaseConnection();
+    const live = await fetchProductsFromSupabase();
+    onProductsUpdated(live);
+  };
+
+  // Test Supabase Connection
+  const handleTestSupabaseConnection = async () => {
+    setTestConnectionStatus({ testing: true, message: 'Testing connection to Supabase...' });
+    const res = await testSupabaseConnection();
+    setTestConnectionStatus({
+      testing: false,
+      message: res.message,
+      connected: res.connected,
+      count: res.count
+    });
+    if (res.connected) {
+      addToast(`Connected to Supabase! Found ${res.count} watches in products table.`, 'success');
+      const fresh = await fetchProductsFromSupabase();
+      onProductsUpdated(fresh);
+    } else {
+      addToast(`Supabase: ${res.message}`, 'error');
+    }
+  };
+
+  // Seed Starter Casio Catalog to Supabase
+  const handleSeedStarterCatalog = async () => {
+    if (!isConnected) {
+      alert('Please connect Supabase credentials first.');
+      return;
+    }
+    if (!window.confirm(`Insert ${CASIO_STARTER_MODELS.length} authentic Casio starter watches into your Supabase database?`)) return;
+
+    setIsSeedingStarter(true);
+    const result = await bulkSeedProductsToSupabase(CASIO_STARTER_MODELS);
+    setIsSeedingStarter(false);
+
+    if (result.success) {
+      alert(`Success! ${result.count} watches inserted into Supabase products table!`);
+      addToast(`Seeded ${result.count} watches into Supabase!`, 'success');
+      const fresh = await fetchProductsFromSupabase();
+      onProductsUpdated(fresh);
+    } else {
+      alert(`Seeding failed: ${result.error}`);
+    }
   };
 
   // Filtered watches
@@ -1208,8 +1312,92 @@ CREATE POLICY "Allow public modify site_settings" ON public.site_settings FOR AL
                     How to Connect Supabase to Control Your Website
                   </h3>
                   <p className="text-xs text-purple-900">
-                    Aap ki website mein Supabase integration code bilkul tayar hai! Jab aap Netlify pe deploy karenge to sirf yeh 3 aasan steps follow karlein:
+                    Aap ki website mein Supabase integration code bilkul tayar hai! Niche credentials daal kar live test kar sakte hain:
                   </p>
+                </div>
+
+                {/* Direct Live Credentials & Testing Panel */}
+                <div className="p-4 bg-white border border-slate-200 rounded-xl space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className={`w-2.5 h-2.5 rounded-full ${isConnected ? 'bg-emerald-500' : 'bg-amber-500'}`} />
+                      <h4 className="font-bold text-slate-900 text-sm">
+                        {isConnected ? 'Supabase Database Connected' : 'Connect Your Supabase Project'}
+                      </h4>
+                    </div>
+                    <span className="text-[11px] text-slate-500">
+                      {products.length} {products.length === 1 ? 'watch' : 'watches'} in live DB
+                    </span>
+                  </div>
+
+                  <form onSubmit={handleSaveSupabaseCreds} className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                        VITE_SUPABASE_URL
+                      </label>
+                      <input
+                        type="url"
+                        placeholder="https://xyzcompany.supabase.co"
+                        value={supabaseUrlInput}
+                        onChange={(e) => setSupabaseUrlInput(e.target.value)}
+                        className="w-full px-3 py-1.5 border border-slate-300 rounded font-mono text-xs focus:ring-1 focus:ring-slate-900"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                        VITE_SUPABASE_ANON_KEY
+                      </label>
+                      <input
+                        type="password"
+                        placeholder="eyJhbGciOiJIUzI1NiIsInR5c..."
+                        value={supabaseKeyInput}
+                        onChange={(e) => setSupabaseKeyInput(e.target.value)}
+                        className="w-full px-3 py-1.5 border border-slate-300 rounded font-mono text-xs focus:ring-1 focus:ring-slate-900"
+                      />
+                    </div>
+                    <div className="sm:col-span-2 flex flex-wrap items-center gap-2 pt-1">
+                      <button
+                        type="submit"
+                        className="px-4 py-2 bg-slate-950 hover:bg-slate-800 text-white font-bold rounded text-xs transition-colors cursor-pointer"
+                      >
+                        Save & Connect
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleTestSupabaseConnection}
+                        disabled={testConnectionStatus.testing}
+                        className="px-4 py-2 border border-slate-300 hover:border-slate-800 text-slate-800 font-semibold rounded text-xs transition-colors cursor-pointer flex items-center gap-1.5"
+                      >
+                        {testConnectionStatus.testing ? (
+                          <div className="w-3.5 h-3.5 border-2 border-slate-400 border-t-slate-900 rounded-full animate-spin" />
+                        ) : (
+                          <RefreshCw className="w-3.5 h-3.5" />
+                        )}
+                        <span>Test Live Connection</span>
+                      </button>
+
+                      {/* Optional Seed Button */}
+                      <button
+                        type="button"
+                        onClick={handleSeedStarterCatalog}
+                        disabled={isSeedingStarter}
+                        className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold rounded text-xs transition-colors cursor-pointer flex items-center gap-1.5 ml-auto"
+                      >
+                        <Sparkles className="w-3.5 h-3.5" />
+                        <span>{isSeedingStarter ? 'Seeding...' : 'Seed Starter Casio Watches to DB'}</span>
+                      </button>
+                    </div>
+                  </form>
+
+                  {testConnectionStatus.message && (
+                    <div className={`p-2.5 rounded text-xs font-medium ${
+                      testConnectionStatus.connected 
+                        ? 'bg-emerald-50 text-emerald-900 border border-emerald-200' 
+                        : 'bg-rose-50 text-rose-900 border border-rose-200'
+                    }`}>
+                      {testConnectionStatus.message}
+                    </div>
+                  )}
                 </div>
 
                 <div className="space-y-3 text-xs">

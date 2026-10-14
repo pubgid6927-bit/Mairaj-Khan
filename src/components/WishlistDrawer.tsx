@@ -1,6 +1,6 @@
 import React from 'react';
 import { useCart, formatPKR } from '../context/CartContext';
-import { ALL_PRODUCTS } from '../data/products';
+import { WatchProduct } from '../types';
 import { UniqueLuxuryBagIcon } from './UniqueLuxuryBagIcon';
 import { 
   X, 
@@ -12,6 +12,7 @@ import {
 
 export const WishlistDrawer: React.FC = () => {
   const { 
+    products,
     wishlist, 
     isWishlistOpen, 
     setIsWishlistOpen, 
@@ -23,16 +24,16 @@ export const WishlistDrawer: React.FC = () => {
 
   if (!isWishlistOpen) return null;
 
-  const wishlistProducts = ALL_PRODUCTS.filter((product) =>
+  const wishlistProducts = products.filter((product) =>
     wishlist.includes(product.id)
   );
 
-  const handleProductClick = (product: typeof ALL_PRODUCTS[0]) => {
+  const handleProductClick = (product: WatchProduct) => {
     setSelectedProduct(product);
     setIsWishlistOpen(false);
   };
 
-  const handleMoveToCart = (product: typeof ALL_PRODUCTS[0], e: React.MouseEvent) => {
+  const handleMoveToCart = (product: WatchProduct, e: React.MouseEvent) => {
     e.stopPropagation();
     addToCart(product, 1);
     setIsWishlistOpen(false);

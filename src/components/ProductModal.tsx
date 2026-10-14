@@ -1,7 +1,6 @@
 import React, { useState, useRef, MouseEvent, useEffect, useMemo } from 'react';
 import { WatchProduct } from '../types';
 import { useCart, formatPKR } from '../context/CartContext';
-import { ALL_PRODUCTS } from '../data/products';
 import { UniqueLuxuryBagIcon } from './UniqueLuxuryBagIcon';
 import { 
   X, 
@@ -22,7 +21,7 @@ interface ProductModalProps {
 }
 
 export const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) => {
-  const { addToCart, isInWishlist, toggleWishlist, setIsCartOpen, setSelectedProduct, addToast } = useCart();
+  const { products, addToCart, isInWishlist, toggleWishlist, setIsCartOpen, setSelectedProduct, addToast } = useCart();
   const [imageError, setImageError] = useState(false);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [copied, setCopied] = useState(false);
@@ -106,17 +105,17 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) 
     }
   };
 
-  // Dynamic Related Watches (4 to 8 similar watches from the same Collection/Series)
+  // Dynamic Related Watches (4 to 8 similar watches from the same Collection/Series from Supabase)
   const relatedWatches = useMemo(() => {
-    let matched = ALL_PRODUCTS.filter((p) => p.series === product.series && p.id !== product.id);
+    let matched = products.filter((p) => p.series === product.series && p.id !== product.id);
     if (matched.length < 8) {
-      const complementary = ALL_PRODUCTS.filter(
+      const complementary = products.filter(
         (p) => p.gender === product.gender && p.id !== product.id && p.series !== product.series
       );
       matched = [...matched, ...complementary];
     }
     return matched.slice(0, 8);
-  }, [product.id, product.series, product.gender]);
+  }, [product.id, product.series, product.gender, products]);
 
   const scrollCarousel = (direction: 'left' | 'right') => {
     if (carouselRef.current) {

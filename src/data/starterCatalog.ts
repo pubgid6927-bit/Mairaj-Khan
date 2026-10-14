@@ -1,0 +1,220 @@
+import { WatchProduct } from '../types';
+
+// Curated authentic starter catalog available strictly for manual database seeding
+// via the Admin Panel "Sync/Seed to Supabase" button. Never used as a fallback in the app.
+export const CASIO_STARTER_MODELS: WatchProduct[] = [
+  {
+    id: "casio-mtp-1302d-2a2v-tiffany",
+    model: "MTP-1302D-2A2V",
+    series: "Casio MTP",
+    gender: "Men",
+    name: "Casio MTP-1302D-2A2V Tiffany Blue Dial Fluted Bezel",
+    pricePKR: 19500,
+    originalPricePKR: 24000,
+    inStock: true,
+    stockCount: 15,
+    isFeatured: true,
+    isBestSeller: true,
+    isNewArrival: true,
+    rating: 5.0,
+    reviewsCount: 184,
+    imageUrl: "https://watchcentre.pk/wp-content/uploads/2023/04/casio-mtp-1302d-2a2v-tiffany-blue-dial-watch.jpg",
+    alternateImageUrl: "https://watchcentre.pk/wp-content/uploads/2023/04/casio-mtp-1302d-2a2v-tiffany-blue-dial-watch-1.jpg",
+    description: "The viral Casio Tiffany Blue dial analog timepiece featuring a classic fluted coin-edge bezel, stainless steel bracelet, date display at 3 o'clock, mineral glass scratch resistance, and 50M water resistance.",
+    specs: {
+      caseDiameter: "38.5 mm",
+      caseThickness: "9.2 mm",
+      waterResistance: "50 Meters (5 BAR)",
+      glassType: "Mineral Glass",
+      bandMaterial: "Stainless Steel",
+      movement: "Quartz",
+      batteryLife: "Approx. 3 years (SR626SW)",
+      weight: "105 g",
+      accuracy: "±20 seconds per month",
+      warranty: "1-Year Official New Madina Electronics Warranty"
+    },
+    features: [
+      "100% Genuine Casio Tiffany Blue Dial (MTP-1302D-2A2V)",
+      "Fluted Coin-Edge Bezel Inspired by Haute Horlogerie",
+      "Triple-Fold Clasp Stainless Steel Link Bracelet",
+      "50M Water Resistance for Everyday Wear"
+    ]
+  },
+  {
+    id: "casio-gshock-ga-2100-1a1-casioak",
+    model: "GA-2100-1A1",
+    series: "Casio G-Shock",
+    gender: "Men",
+    name: "Casio G-Shock GA-2100-1A1 CasiOak Stealth Matte Black",
+    pricePKR: 34500,
+    originalPricePKR: 38000,
+    inStock: true,
+    stockCount: 8,
+    isFeatured: true,
+    isBestSeller: true,
+    isNewArrival: false,
+    rating: 4.9,
+    reviewsCount: 142,
+    imageUrl: "https://watchcentre.pk/wp-content/uploads/2020/09/Casio-G-Shock-GA-2100-1A1-Men-Watch.jpg",
+    alternateImageUrl: "https://watchcentre.pk/wp-content/uploads/2020/09/Casio-G-Shock-GA-2100-1A1-Black-Dial-Men-Watch.jpg",
+    description: "The legendary G-Shock 'CasiOak' octagonal bezel watch with ultra-thin Carbon Core Guard structure, all-black stealth aesthetic, 200M water resistance, double LED illumination, and world time.",
+    specs: {
+      caseDiameter: "45.4 mm",
+      caseThickness: "11.8 mm",
+      waterResistance: "200 Meters (20 BAR)",
+      glassType: "Mineral Glass",
+      bandMaterial: "Resin / Silicone",
+      movement: "Quartz",
+      batteryLife: "Approx. 3 years",
+      weight: "51 g",
+      accuracy: "±15 seconds per month",
+      warranty: "1-Year Official New Madina Electronics Warranty"
+    },
+    features: [
+      "Carbon Core Guard Ultra-Shock Resistant Structure",
+      "Slim 11.8mm Octagonal Case Profile",
+      "200-Meter Certified Diver Water Resistance",
+      "Double Super Illuminator LED for Analog & Digital Displays"
+    ]
+  },
+  {
+    id: "casio-edifice-efs-s510d-1av-solar",
+    model: "EFS-S510D-1AV",
+    series: "Casio Edifice",
+    gender: "Men",
+    name: "Casio Edifice EFS-S510D-1AV Sapphire Solar Chronograph",
+    pricePKR: 48500,
+    originalPricePKR: 54000,
+    inStock: true,
+    stockCount: 6,
+    isFeatured: true,
+    isBestSeller: false,
+    isNewArrival: true,
+    rating: 4.9,
+    reviewsCount: 67,
+    imageUrl: "https://watchcentre.pk/wp-content/uploads/2018/12/Casio-Edifice-EFS-S510D-1AV-Chronograph-Watch.jpg",
+    description: "Premium Casio Edifice motor-sports chronograph featuring genuine scratch-resistant Sapphire Crystal, Tough Solar charging dial, 100M water resistance, and solid stainless steel construction.",
+    specs: {
+      caseDiameter: "46.1 mm",
+      caseThickness: "12.0 mm",
+      waterResistance: "100 Meters (10 BAR)",
+      glassType: "Sapphire Crystal",
+      bandMaterial: "Stainless Steel",
+      movement: "Tough Solar",
+      batteryLife: "Solar Powered with Battery Level Indicator",
+      weight: "159 g",
+      warranty: "1-Year Official New Madina Electronics Warranty"
+    },
+    features: [
+      "Scratch-Resistant Sapphire Crystal with Anti-Glare",
+      "Tough Solar Technology Powered by Any Light Source",
+      "1/1-Second Motor Sports Precision Stopwatch",
+      "Solid Stainless Steel Band with One-Touch 3-Fold Clasp"
+    ]
+  },
+  {
+    id: "casio-vintage-a168wa-1w-illuminator",
+    model: "A168WA-1W",
+    series: "Casio Vintage",
+    gender: "Unisex",
+    name: "Casio Vintage A168WA-1W ElectroLuminescence Digital",
+    pricePKR: 9500,
+    originalPricePKR: 11000,
+    inStock: true,
+    stockCount: 25,
+    isFeatured: true,
+    isBestSeller: true,
+    isNewArrival: false,
+    rating: 4.9,
+    reviewsCount: 310,
+    imageUrl: "https://watchcentre.pk/wp-content/uploads/2016/09/Casio-A168WA-1W-Illuminator-Classic-Digital-Watch.jpg",
+    description: "The timeless Casio Vintage icon featuring teal blue ElectroLuminescence full-face backlight, daily alarm, 1/100-second stopwatch, auto calendar, and adjustable stainless steel link band.",
+    specs: {
+      caseDiameter: "36.3 mm",
+      caseThickness: "9.6 mm",
+      waterResistance: "Water Resistant (Splash Proof)",
+      glassType: "Resin Glass",
+      bandMaterial: "Stainless Steel",
+      movement: "Digital",
+      batteryLife: "Approx. 7 years (CR2016)",
+      weight: "49 g",
+      warranty: "1-Year Official New Madina Electronics Warranty"
+    },
+    features: [
+      "Electroluminescent (EL) Full-Face Teal Backlight",
+      "Iconic 1980s Retro Vintage Silver Chrome Design",
+      "Ultra-Long 7-Year Battery Life Module",
+      "Adjustable Slide Clasp - No Tools Required"
+    ]
+  },
+  {
+    id: "casio-ltp-v007l-7b1-tank",
+    model: "LTP-V007L-7B1",
+    series: "Casio LTP",
+    gender: "Ladies",
+    name: "Casio LTP-V007L-7B1 Roman Tank Rectangle Leather",
+    pricePKR: 12500,
+    originalPricePKR: 14500,
+    inStock: true,
+    stockCount: 14,
+    isFeatured: true,
+    isBestSeller: true,
+    isNewArrival: true,
+    rating: 4.8,
+    reviewsCount: 95,
+    imageUrl: "https://watchcentre.pk/wp-content/uploads/2018/10/Casio-LTP-V007L-7B1-Women-Watch.jpg",
+    description: "The elegant Casio Ladies Tank featuring rectangular case with black Roman numeral markers, crisp silver sunburst dial, and supple genuine leather strap.",
+    specs: {
+      caseDiameter: "22.0 mm",
+      caseThickness: "7.5 mm",
+      waterResistance: "Water Resistant",
+      glassType: "Mineral Glass",
+      bandMaterial: "Genuine Leather",
+      movement: "Quartz",
+      batteryLife: "Approx. 3 years (SR626SW)",
+      weight: "22 g",
+      warranty: "1-Year Official New Madina Electronics Warranty"
+    },
+    features: [
+      "Parisian 'Tank' Rectangular Haute Horlogerie Silhouette",
+      "Crisp Roman Numeral Hour Markers with Blued Hands",
+      "Comfort-Fit Genuine Leather Strap",
+      "Japanese Quartz Movement with 3-Year Battery"
+    ]
+  },
+  {
+    id: "casio-protrek-prg-270-1-triple-sensor",
+    model: "PRG-270-1",
+    series: "Casio ProTrek",
+    gender: "Men",
+    name: "Casio ProTrek PRG-270-1 Triple Sensor Solar Outdoor",
+    pricePKR: 52000,
+    originalPricePKR: 58000,
+    inStock: true,
+    stockCount: 4,
+    isFeatured: false,
+    isBestSeller: false,
+    isNewArrival: true,
+    rating: 4.9,
+    reviewsCount: 38,
+    imageUrl: "https://watchcentre.pk/wp-content/uploads/2016/11/Casio-Protrek-PRG-270-1-Solar-Triple-Sensor-Watch.jpg",
+    description: "Authentic Casio ProTrek exploration watch equipped with Version 3 Triple Sensor: Altimeter/Barometer, Digital Compass, and Thermometer powered by Tough Solar.",
+    specs: {
+      caseDiameter: "52.4 mm",
+      caseThickness: "14.4 mm",
+      waterResistance: "100 Meters (10 BAR)",
+      glassType: "Mineral Glass",
+      bandMaterial: "Resin / Silicone",
+      movement: "Tough Solar",
+      batteryLife: "Solar Powered (9 months on full charge without light)",
+      weight: "67 g",
+      warranty: "1-Year Official New Madina Electronics Warranty"
+    },
+    features: [
+      "Triple Sensor Version 3 (Altimeter, Barometer, Compass, Temp)",
+      "Tough Solar High-Efficiency Solar Panel",
+      "Low Temperature Resistant (-10°C / 14°F)",
+      "Sunrise & Sunset Time Display with Barometric Trend Alarm"
+    ]
+  }
+];

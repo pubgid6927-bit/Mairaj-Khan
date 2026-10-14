@@ -1,13 +1,21 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { WatchProduct, CartItem, Order } from '../types';
+import { fetchProductsFromSupabase } from '../lib/supabase';
 
 interface ToastMessage {
   id: string;
   message: string;
-  type?: 'success' | 'info';
+  type?: 'success' | 'info' | 'error';
 }
 
 interface CartContextType {
+  // Live Supabase Products Catalog (Exclusively from Supabase 'products' table)
+  products: WatchProduct[];
+  setProducts: React.Dispatch<React.SetStateAction<WatchProduct[]>>;
+  isLoadingProducts: boolean;
+  refreshProducts: () => Promise<WatchProduct[]>;
+
+  // Cart
   cart: CartItem[];
   addToCart: (product: WatchProduct, quantity?: number) => void;
   removeFromCart: (productId: string) => void;
@@ -41,7 +49,7 @@ interface CartContextType {
 
   // Notification Toast
   toasts: ToastMessage[];
-  addToast: (message: string, type?: 'success' | 'info') => void;
+  addToast: (message: string, type?: 'success' | 'info' | 'error') => void;
   removeToast: (id: string) => void;
 }
 
@@ -51,6 +59,10 @@ const CART_STORAGE_KEY = 'new_madina_electronics_cart_v1';
 const WISHLIST_STORAGE_KEY = 'new_madina_electronics_wishlist_v1';
 
 export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  // Live products exclusively fetched from Supabase (Zero mock fallbacks)
+  const [products, setProducts] = useState<WatchProduct[]>([]);
+  const [isLoadingProducts, setIsLoadingProducts] = useState<boolean>(true);
+
   const [cart, setCart] = useState<CartItem[]>(() => {
     try {
       const stored = localStorage.getItem(CART_STORAGE_KEY);
@@ -78,6 +90,27 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [activeSeries, setActiveSeries] = useState('All');
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
 
+  // Refresh products from Supabase
+  const refreshProducts = useCallback(async (): Promise<WatchProduct[]> => {
+    setIsLoadingProducts(true);
+    try {
+      const liveData = await fetchProductsFromSupabase();
+      setProducts(liveData);
+      return liveData;
+    } catch (err) {
+      console.error('Failed to fetch live products from Supabase:', err);
+      setProducts([]);
+      return [];
+    } finally {
+      setIsLoadingProducts(false);
+    }
+  }, []);
+
+  // Initial fetch on mount
+  useEffect(() => {
+    refreshProducts();
+  }, [refreshProducts]);
+
   useEffect(() => {
     try {
       localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cart));
@@ -94,12 +127,12 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [wishlist]);
 
-  const addToast = (message: string, type: 'success' | 'info' = 'success') => {
+  const addToast = (message: string, type: 'success' | 'info' | 'error' = 'success') => {
     const id = Math.random().toString(36).substring(2, 9);
     setToasts((prev) => [...prev, { id, message, type }]);
     setTimeout(() => {
       setToasts((prev) => prev.filter((t) => t.id !== id));
-    }, 2800);
+    }, 3200);
   };
 
   const removeToast = (id: string) => {
@@ -168,6 +201,10 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   return (
     <CartContext.Provider
       value={{
+        products,
+        setProducts,
+        isLoadingProducts,
+        refreshProducts,
         cart,
         addToCart,
         removeFromCart,

@@ -3,12 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useMemo, useEffect, useRef } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { CartProvider, useCart } from './context/CartContext';
 import { StoreSettingsProvider } from './context/StoreSettingsContext';
-import { ALL_PRODUCTS } from './data/products';
 import { WatchProduct } from './types';
-import { isSupabaseConfigured, fetchProductsFromSupabase } from './lib/supabase';
 import { Header } from './components/Header';
 import { HeroBanner } from './components/HeroBanner';
 import { SidebarFilter } from './components/SidebarFilter';
@@ -26,16 +24,19 @@ import { AdminPanelModal } from './components/AdminPanelModal';
 import { 
   Search, 
   RotateCcw, 
-  ChevronDown, 
   SlidersHorizontal,
   X,
-  CheckCircle2
+  CheckCircle2,
+  PlusCircle,
+  Database
 } from 'lucide-react';
-
-const PAGE_SIZE = 24;
 
 const MainContent: React.FC = () => {
   const {
+    products,
+    setProducts,
+    isLoadingProducts,
+    refreshProducts,
     activeSeries,
     setActiveSeries,
     searchQuery,
@@ -44,25 +45,11 @@ const MainContent: React.FC = () => {
     setSelectedProduct,
     isCheckoutOpen,
     setIsCheckoutOpen,
-    setIsCartOpen,
-    setIsWishlistOpen,
     completedOrder,
     setCompletedOrder,
     toasts,
     removeToast
   } = useCart();
-
-  // Dynamic products list (Supabase live DB with local fallback)
-  const [allProducts, setAllProducts] = useState<WatchProduct[]>(() => {
-    const saved = localStorage.getItem('nme_custom_products');
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
-      } catch (e) {}
-    }
-    return ALL_PRODUCTS;
-  });
 
   const [isAdminOpen, setIsAdminOpen] = useState(false);
   const [selectedGender, setSelectedGender] = useState('All');
@@ -71,7 +58,6 @@ const MainContent: React.FC = () => {
   const [selectedMovement, setSelectedMovement] = useState('All');
   const [selectedWaterResistance, setSelectedWaterResistance] = useState('All');
   const [sortBy, setSortBy] = useState('featured');
-  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 
   // Filter drawer controls (collapsible sidebar)
   const [isFilterSidebarVisible, setIsFilterSidebarVisible] = useState(false);
@@ -113,36 +99,22 @@ const MainContent: React.FC = () => {
     }
   };
 
-  // Sync from Supabase on mount if configured
-  useEffect(() => {
-    if (isSupabaseConfigured()) {
-      fetchProductsFromSupabase().then((data) => {
-        if (data && data.length > 0) {
-          setAllProducts(data);
-        }
-      });
-    }
-  }, []);
-
   const handleProductsUpdated = (updatedList: WatchProduct[]) => {
-    setAllProducts(updatedList);
-    try {
-      localStorage.setItem('nme_custom_products', JSON.stringify(updatedList));
-    } catch (e) {}
+    setProducts(updatedList);
   };
 
-  // Compute counts per series
+  // Compute counts per series directly from live products
   const seriesCounts = useMemo(() => {
     const counts: Record<string, number> = {};
-    allProducts.forEach((p) => {
+    products.forEach((p) => {
       counts[p.series] = (counts[p.series] || 0) + 1;
     });
     return counts;
-  }, [allProducts]);
+  }, [products]);
 
-  // Filter & Sort Logic
+  // Filter & Sort Logic directly across ALL records from Supabase
   const filteredProducts = useMemo(() => {
-    return allProducts.filter((product) => {
+    return products.filter((product) => {
       // 1. Series Filter
       if (activeSeries !== 'All' && product.series !== activeSeries) {
         return false;
@@ -159,24 +131,24 @@ const MainContent: React.FC = () => {
         const matchesModel = product.model.toLowerCase().includes(q);
         const matchesName = product.name.toLowerCase().includes(q);
         const matchesSeries = product.series.toLowerCase().includes(q);
-        const matchesFeatures = product.features.some((f) => f.toLowerCase().includes(q));
+        const matchesFeatures = (product.features || []).some((f) => f.toLowerCase().includes(q));
         if (!matchesModel && !matchesName && !matchesSeries && !matchesFeatures) {
           return false;
         }
       }
 
       // 4. Band Material
-      if (selectedBand !== 'All' && product.specs.bandMaterial !== selectedBand) {
+      if (selectedBand !== 'All' && product.specs?.bandMaterial !== selectedBand) {
         return false;
       }
 
       // 5. Movement
-      if (selectedMovement !== 'All' && product.specs.movement !== selectedMovement) {
+      if (selectedMovement !== 'All' && product.specs?.movement !== selectedMovement) {
         return false;
       }
 
       // 6. Water Resistance
-      if (selectedWaterResistance !== 'All' && !product.specs.waterResistance.includes(selectedWaterResistance)) {
+      if (selectedWaterResistance !== 'All' && !product.specs?.waterResistance?.includes(selectedWaterResistance)) {
         return false;
       }
 
@@ -194,12 +166,12 @@ const MainContent: React.FC = () => {
     }).sort((a, b) => {
       if (sortBy === 'price-asc') return a.pricePKR - b.pricePKR;
       if (sortBy === 'price-desc') return b.pricePKR - a.pricePKR;
-      if (sortBy === 'rating') return b.rating - a.rating;
+      if (sortBy === 'rating') return (b.rating || 0) - (a.rating || 0);
       if (sortBy === 'model') return a.model.localeCompare(b.model);
       return (b.isFeatured ? 1 : 0) - (a.isFeatured ? 1 : 0);
     });
   }, [
-    allProducts, 
+    products, 
     activeSeries, 
     selectedGender, 
     searchQuery, 
@@ -229,43 +201,19 @@ const MainContent: React.FC = () => {
     setSelectedWaterResistance('All');
     setSearchQuery('');
     setSortBy('featured');
-    setVisibleCount(PAGE_SIZE);
   };
-
-  const paginatedProducts = filteredProducts.slice(0, visibleCount);
-
-  // Automatic Infinite Scroll Sentinel Ref & Observer
-  const loadMoreSentinelRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const sentinel = loadMoreSentinelRef.current;
-    if (!sentinel) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const first = entries[0];
-        if (first.isIntersecting && visibleCount < filteredProducts.length) {
-          setVisibleCount((prev) => Math.min(prev + PAGE_SIZE, filteredProducts.length));
-        }
-      },
-      { rootMargin: '350px' }
-    );
-
-    observer.observe(sentinel);
-    return () => observer.disconnect();
-  }, [visibleCount, filteredProducts.length]);
 
   // Deep linking: open watch modal if ?watch=MODEL is present in URL
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const watchModel = params.get('watch');
-    if (watchModel && allProducts.length > 0) {
-      const found = allProducts.find((p) => p.model.toLowerCase() === watchModel.toLowerCase());
+    if (watchModel && products.length > 0) {
+      const found = products.find((p) => p.model.toLowerCase() === watchModel.toLowerCase());
       if (found) {
         setSelectedProduct(found);
       }
     }
-  }, [allProducts, setSelectedProduct]);
+  }, [products, setSelectedProduct]);
 
   return (
     <div className="min-h-screen bg-white text-neutral-900 flex flex-col justify-between selection:bg-neutral-900 selection:text-white font-sans antialiased">
@@ -294,20 +242,20 @@ const MainContent: React.FC = () => {
             {/* Watch Category Sub-Filters (ALL, MEN, WOMEN, EDIFICE, G-SHOCK, VINTAGE, PROTREK) */}
             <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-6 pt-3 text-[11px] sm:text-xs tracking-[0.18em] uppercase text-neutral-500 font-medium">
               <button
-                onClick={() => { setActiveSeries('All'); setSelectedGender('All'); setVisibleCount(PAGE_SIZE); }}
+                onClick={() => { setActiveSeries('All'); setSelectedGender('All'); }}
                 className={`pb-1 transition-colors cursor-pointer border-b ${
                   activeSeries === 'All' && selectedGender === 'All'
                     ? 'text-neutral-950 border-neutral-950 font-bold'
                     : 'text-neutral-400 hover:text-neutral-900 border-transparent'
                 }`}
               >
-                ALL
+                ALL ({products.length})
               </button>
 
               <span className="text-neutral-200 select-none">|</span>
 
               <button
-                onClick={() => { setSelectedGender('Men'); setActiveSeries('All'); setVisibleCount(PAGE_SIZE); }}
+                onClick={() => { setActiveSeries('All'); setSelectedGender('Men'); }}
                 className={`pb-1 transition-colors cursor-pointer border-b ${
                   selectedGender === 'Men' && activeSeries === 'All'
                     ? 'text-neutral-950 border-neutral-950 font-bold'
@@ -320,7 +268,7 @@ const MainContent: React.FC = () => {
               <span className="text-neutral-200 select-none">|</span>
 
               <button
-                onClick={() => { setSelectedGender('Ladies'); setActiveSeries('All'); setVisibleCount(PAGE_SIZE); }}
+                onClick={() => { setActiveSeries('All'); setSelectedGender('Ladies'); }}
                 className={`pb-1 transition-colors cursor-pointer border-b ${
                   selectedGender === 'Ladies' && activeSeries === 'All'
                     ? 'text-neutral-950 border-neutral-950 font-bold'
@@ -333,53 +281,66 @@ const MainContent: React.FC = () => {
               <span className="text-neutral-200 select-none">|</span>
 
               <button
-                onClick={() => { setActiveSeries('Casio Edifice'); setSelectedGender('All'); setVisibleCount(PAGE_SIZE); }}
+                onClick={() => { setActiveSeries('Casio MTP'); setSelectedGender('All'); }}
+                className={`pb-1 transition-colors cursor-pointer border-b ${
+                  activeSeries === 'Casio MTP'
+                    ? 'text-neutral-950 border-neutral-950 font-bold'
+                    : 'text-neutral-400 hover:text-neutral-900 border-transparent'
+                }`}
+              >
+                MTP {seriesCounts['Casio MTP'] ? `(${seriesCounts['Casio MTP']})` : ''}
+              </button>
+
+              <span className="text-neutral-200 select-none">|</span>
+
+              <button
+                onClick={() => { setActiveSeries('Casio Edifice'); setSelectedGender('All'); }}
                 className={`pb-1 transition-colors cursor-pointer border-b ${
                   activeSeries === 'Casio Edifice'
                     ? 'text-neutral-950 border-neutral-950 font-bold'
                     : 'text-neutral-400 hover:text-neutral-900 border-transparent'
                 }`}
               >
-                EDIFICE
+                EDIFICE {seriesCounts['Casio Edifice'] ? `(${seriesCounts['Casio Edifice']})` : ''}
               </button>
 
               <span className="text-neutral-200 select-none">|</span>
 
               <button
-                onClick={() => { setActiveSeries('Casio G-Shock'); setSelectedGender('All'); setVisibleCount(PAGE_SIZE); }}
+                onClick={() => { setActiveSeries('Casio G-Shock'); setSelectedGender('All'); }}
                 className={`pb-1 transition-colors cursor-pointer border-b ${
                   activeSeries === 'Casio G-Shock'
                     ? 'text-neutral-950 border-neutral-950 font-bold'
                     : 'text-neutral-400 hover:text-neutral-900 border-transparent'
                 }`}
               >
-                G-SHOCK
+                G-SHOCK {seriesCounts['Casio G-Shock'] ? `(${seriesCounts['Casio G-Shock']})` : ''}
               </button>
 
               <span className="text-neutral-200 select-none">|</span>
 
               <button
-                onClick={() => { setActiveSeries('Casio Vintage'); setSelectedGender('All'); setVisibleCount(PAGE_SIZE); }}
+                onClick={() => { setActiveSeries('Casio Vintage'); setSelectedGender('All'); }}
                 className={`pb-1 transition-colors cursor-pointer border-b ${
                   activeSeries === 'Casio Vintage'
                     ? 'text-neutral-950 border-neutral-950 font-bold'
                     : 'text-neutral-400 hover:text-neutral-900 border-transparent'
                 }`}
               >
-                VINTAGE
+                VINTAGE {seriesCounts['Casio Vintage'] ? `(${seriesCounts['Casio Vintage']})` : ''}
               </button>
 
               <span className="text-neutral-200 select-none">|</span>
 
               <button
-                onClick={() => { setActiveSeries('Casio ProTrek'); setSelectedGender('All'); setVisibleCount(PAGE_SIZE); }}
+                onClick={() => { setActiveSeries('Casio ProTrek'); setSelectedGender('All'); }}
                 className={`pb-1 transition-colors cursor-pointer border-b ${
                   activeSeries === 'Casio ProTrek'
                     ? 'text-neutral-950 border-neutral-950 font-bold'
                     : 'text-neutral-400 hover:text-neutral-900 border-transparent'
                 }`}
               >
-                PROTREK
+                PROTREK {seriesCounts['Casio ProTrek'] ? `(${seriesCounts['Casio ProTrek']})` : ''}
               </button>
             </div>
           </div>
@@ -402,6 +363,14 @@ const MainContent: React.FC = () => {
                 <span>{isFilterSidebarVisible ? 'Hide Filters' : 'Filter & Refine'}</span>
                 {hasActiveFilters && <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />}
               </button>
+
+              <span className="text-[11px] text-neutral-500 font-medium">
+                {isLoadingProducts ? (
+                  'Fetching from Supabase...'
+                ) : (
+                  <>Showing <strong className="text-neutral-950">{filteredProducts.length}</strong> {filteredProducts.length === 1 ? 'timepiece' : 'timepieces'}</>
+                )}
+              </span>
             </div>
 
             {/* Right: Clean Sort Dropdown */}
@@ -449,81 +418,98 @@ const MainContent: React.FC = () => {
                 </span>
               )}
 
+              {selectedMovement !== 'All' && (
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-neutral-100 rounded text-neutral-800 text-[11px]">
+                  <span>Movement: {selectedMovement}</span>
+                  <X className="w-3 h-3 hover:text-black cursor-pointer" onClick={() => setSelectedMovement('All')} />
+                </span>
+              )}
+
+              {selectedWaterResistance !== 'All' && (
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-neutral-100 rounded text-neutral-800 text-[11px]">
+                  <span>WR: {selectedWaterResistance}</span>
+                  <X className="w-3 h-3 hover:text-black cursor-pointer" onClick={() => setSelectedWaterResistance('All')} />
+                </span>
+              )}
+
               {selectedPriceRange !== 'All' && (
                 <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-neutral-100 rounded text-neutral-800 text-[11px]">
-                  <span>Price Range</span>
+                  <span>Price Filter</span>
                   <X className="w-3 h-3 hover:text-black cursor-pointer" onClick={() => setSelectedPriceRange('All')} />
                 </span>
               )}
 
               {searchQuery && (
                 <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-neutral-100 rounded text-neutral-800 text-[11px]">
-                  <span>"{searchQuery}"</span>
+                  <span>Search: &quot;{searchQuery}&quot;</span>
                   <X className="w-3 h-3 hover:text-black cursor-pointer" onClick={() => setSearchQuery('')} />
                 </span>
               )}
 
               <button
                 onClick={resetAllFilters}
-                className="text-[11px] font-bold text-neutral-900 hover:underline ml-2 cursor-pointer"
+                className="text-[11px] text-neutral-500 hover:text-neutral-950 underline underline-offset-2 ml-1 cursor-pointer font-medium"
               >
                 Clear All
               </button>
             </div>
           )}
 
-          {/* 3. Main Product Grid Layout with Increased Vertical & Horizontal Breathing Room */}
-          <div className="flex flex-col lg:flex-row gap-10 items-start">
+          {/* 3. Catalog Main Layout: Sidebar + Large Product Cards Grid */}
+          <div className="flex gap-8 lg:gap-12 items-start">
             
-            {/* Collapsible Left Filter Sidebar (Desktop) */}
+            {/* Desktop Left Collapsible Filter Sidebar */}
             {isFilterSidebarVisible && (
-              <SidebarFilter
-                activeSeries={activeSeries}
-                onSelectSeries={(s) => { setActiveSeries(s); setVisibleCount(PAGE_SIZE); }}
-                seriesCounts={seriesCounts}
-                totalCount={allProducts.length}
-                selectedGender={selectedGender}
-                onSelectGender={(g) => { setSelectedGender(g); setVisibleCount(PAGE_SIZE); }}
-                selectedBand={selectedBand}
-                onSelectBand={(b) => { setSelectedBand(b); setVisibleCount(PAGE_SIZE); }}
-                selectedPriceRange={selectedPriceRange}
-                onSelectPriceRange={(pr) => { setSelectedPriceRange(pr); setVisibleCount(PAGE_SIZE); }}
-                selectedMovement={selectedMovement}
-                onSelectMovement={(m) => { setSelectedMovement(m); setVisibleCount(PAGE_SIZE); }}
-                selectedWaterResistance={selectedWaterResistance}
-                onSelectWaterResistance={(wr) => { setSelectedWaterResistance(wr); setVisibleCount(PAGE_SIZE); }}
-                onResetFilters={resetAllFilters}
-                hasActiveFilters={hasActiveFilters}
-                isMobileDrawerOpen={false}
-                onCloseMobileDrawer={() => {}}
-              />
+              <div className="hidden lg:block w-64 shrink-0 transition-all duration-300">
+                <SidebarFilter
+                  activeSeries={activeSeries}
+                  onSelectSeries={setActiveSeries}
+                  seriesCounts={seriesCounts}
+                  totalCount={products.length}
+                  hasActiveFilters={hasActiveFilters}
+                  selectedGender={selectedGender}
+                  onSelectGender={setSelectedGender}
+                  selectedBand={selectedBand}
+                  onSelectBand={setSelectedBand}
+                  selectedMovement={selectedMovement}
+                  onSelectMovement={setSelectedMovement}
+                  selectedWaterResistance={selectedWaterResistance}
+                  onSelectWaterResistance={setSelectedWaterResistance}
+                  selectedPriceRange={selectedPriceRange}
+                  onSelectPriceRange={setSelectedPriceRange}
+                  onResetFilters={resetAllFilters}
+                  isMobileDrawerOpen={false}
+                  onCloseMobileDrawer={() => {}}
+                />
+              </div>
             )}
 
-            {/* Mobile Drawer Filter */}
+            {/* Mobile Filter Drawer Overlay */}
             <SidebarFilter
               activeSeries={activeSeries}
-              onSelectSeries={(s) => { setActiveSeries(s); setVisibleCount(PAGE_SIZE); }}
+              onSelectSeries={setActiveSeries}
               seriesCounts={seriesCounts}
-              totalCount={allProducts.length}
-              selectedGender={selectedGender}
-              onSelectGender={(g) => { setSelectedGender(g); setVisibleCount(PAGE_SIZE); }}
-              selectedBand={selectedBand}
-              onSelectBand={(b) => { setSelectedBand(b); setVisibleCount(PAGE_SIZE); }}
-              selectedPriceRange={selectedPriceRange}
-              onSelectPriceRange={(pr) => { setSelectedPriceRange(pr); setVisibleCount(PAGE_SIZE); }}
-              selectedMovement={selectedMovement}
-              onSelectMovement={(m) => { setSelectedMovement(m); setVisibleCount(PAGE_SIZE); }}
-              selectedWaterResistance={selectedWaterResistance}
-              onSelectWaterResistance={(wr) => { setSelectedWaterResistance(wr); setVisibleCount(PAGE_SIZE); }}
-              onResetFilters={resetAllFilters}
+              totalCount={products.length}
               hasActiveFilters={hasActiveFilters}
+              selectedGender={selectedGender}
+              onSelectGender={setSelectedGender}
+              selectedBand={selectedBand}
+              onSelectBand={setSelectedBand}
+              selectedMovement={selectedMovement}
+              onSelectMovement={setSelectedMovement}
+              selectedWaterResistance={selectedWaterResistance}
+              onSelectWaterResistance={setSelectedWaterResistance}
+              selectedPriceRange={selectedPriceRange}
+              onSelectPriceRange={setSelectedPriceRange}
+              onResetFilters={resetAllFilters}
               isMobileDrawerOpen={isMobileFilterOpen}
               onCloseMobileDrawer={() => setIsMobileFilterOpen(false)}
             />
 
-            {/* Product Cards Grid: Large Uncluttered Watches on Pure White with Generous Spacing */}
+            {/* Product Cards Grid: Direct Uncapped Display of all Supabase Records */}
             <div className="flex-1 min-w-0 w-full">
-              {paginatedProducts.length > 0 ? (
+              {isLoadingProducts ? (
+                /* Loading Skeleton Grid */
                 <div 
                   className={`grid grid-cols-2 ${
                     isFilterSidebarVisible 
@@ -531,12 +517,63 @@ const MainContent: React.FC = () => {
                       : 'sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-10 sm:gap-x-8 sm:gap-y-14 lg:gap-x-10 lg:gap-y-16'
                   }`}
                 >
-                  {paginatedProducts.map((product) => (
+                  {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+                    <div key={i} className="animate-pulse flex flex-col space-y-4">
+                      <div className="bg-neutral-100 rounded-sm aspect-3/4 w-full" />
+                      <div className="h-3 bg-neutral-200 rounded w-1/3" />
+                      <div className="h-4 bg-neutral-200 rounded w-4/5" />
+                      <div className="h-4 bg-neutral-200 rounded w-1/2" />
+                    </div>
+                  ))}
+                </div>
+              ) : filteredProducts.length > 0 ? (
+                /* Live Supabase Product Grid (No hidden pagination caps) */
+                <div 
+                  className={`grid grid-cols-2 ${
+                    isFilterSidebarVisible 
+                      ? 'sm:grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-10 sm:gap-x-8 sm:gap-y-14 lg:gap-x-10 lg:gap-y-16' 
+                      : 'sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-10 sm:gap-x-8 sm:gap-y-14 lg:gap-x-10 lg:gap-y-16'
+                  }`}
+                >
+                  {filteredProducts.map((product) => (
                     <ProductCard key={product.id} product={product} />
                   ))}
                 </div>
+              ) : products.length === 0 ? (
+                /* Empty Supabase Database State */
+                <div className="py-20 text-center space-y-4 bg-neutral-50 rounded-lg p-8 border border-neutral-200/80">
+                  <div className="w-16 h-16 rounded-full bg-amber-50 text-amber-700 flex items-center justify-center mx-auto border border-amber-200">
+                    <Database className="w-8 h-8" />
+                  </div>
+                  <h3 
+                    className="text-lg font-bold text-neutral-900 font-serif"
+                    style={{ fontFamily: "'Cinzel', serif" }}
+                  >
+                    Supabase Database is Ready
+                  </h3>
+                  <p className="text-xs text-neutral-600 max-w-md mx-auto leading-relaxed">
+                    No watches are currently stored in your live Supabase <code className="bg-neutral-200 px-1 py-0.5 rounded text-neutral-800">products</code> table. 
+                    Add your first watch or click seed starter watches in the Admin Panel.
+                  </p>
+                  <div className="pt-2 flex flex-wrap justify-center gap-3">
+                    <button
+                      onClick={() => setIsAdminOpen(true)}
+                      className="inline-flex items-center gap-2 px-5 py-2.5 bg-neutral-950 hover:bg-neutral-800 text-white font-bold rounded text-xs transition-colors cursor-pointer"
+                    >
+                      <PlusCircle className="w-4 h-4 text-amber-400" />
+                      <span>Open Admin Panel (Add Watch)</span>
+                    </button>
+                    <button
+                      onClick={() => refreshProducts()}
+                      className="inline-flex items-center gap-1.5 px-4 py-2.5 border border-neutral-300 hover:border-neutral-900 text-neutral-800 font-semibold rounded text-xs transition-colors cursor-pointer"
+                    >
+                      <RotateCcw className="w-3.5 h-3.5" />
+                      <span>Refresh Live DB</span>
+                    </button>
+                  </div>
+                </div>
               ) : (
-                /* Empty State */
+                /* Empty Filter Result State */
                 <div className="py-24 text-center space-y-4 bg-neutral-50 rounded p-8">
                   <div className="w-14 h-14 rounded-full bg-white flex items-center justify-center mx-auto text-neutral-400 border border-neutral-200">
                     <Search className="w-6 h-6" />
@@ -554,20 +591,11 @@ const MainContent: React.FC = () => {
                 </div>
               )}
 
-              {/* Automatic Infinite Scroll Sentinel & Subtle Loader */}
-              {visibleCount < filteredProducts.length && (
-                <div ref={loadMoreSentinelRef} className="text-center py-12 flex flex-col items-center justify-center gap-2">
-                  <div className="w-5 h-5 border-2 border-neutral-300 border-t-neutral-950 rounded-full animate-spin" />
-                  <span className="text-[10px] uppercase tracking-widest text-neutral-400 font-sans">
-                    Loading more timepieces...
-                  </span>
-                </div>
-              )}
-
-              {/* End of Catalog Indicator */}
-              {visibleCount >= filteredProducts.length && filteredProducts.length > 0 && (
-                <div className="text-center py-8 mt-6 border-t border-neutral-100 text-[11px] text-neutral-400 uppercase tracking-widest font-sans">
-                  Showing all {filteredProducts.length} timepieces
+              {/* End of Live Catalog Indicator */}
+              {!isLoadingProducts && filteredProducts.length > 0 && (
+                <div className="text-center py-8 mt-6 border-t border-neutral-100 text-[11px] text-neutral-400 uppercase tracking-widest font-sans flex items-center justify-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block animate-pulse" />
+                  <span>Live Supabase Catalog · Showing all {filteredProducts.length} {filteredProducts.length === 1 ? 'timepiece' : 'timepieces'}</span>
                 </div>
               )}
             </div>
@@ -592,7 +620,7 @@ const MainContent: React.FC = () => {
       <AdminPanelModal
         isOpen={isAdminOpen}
         onClose={handleCloseAdmin}
-        products={allProducts}
+        products={products}
         onProductsUpdated={handleProductsUpdated}
       />
 
@@ -627,34 +655,38 @@ const MainContent: React.FC = () => {
       <div className="fixed top-20 sm:top-24 left-1/2 -translate-x-1/2 z-60 flex flex-col gap-2 w-[92%] max-w-md pointer-events-none">
         {toasts.map((toast) => {
           const isWishlistToast = toast.message.toLowerCase().includes('wishlist') || toast.message.toLowerCase().includes('saved');
+          const isErrorToast = toast.type === 'error' || toast.message.toLowerCase().includes('error') || toast.message.toLowerCase().includes('failed');
 
           return (
             <div
               key={toast.id}
               onClick={() => removeToast(toast.id)}
-              className="pointer-events-auto bg-neutral-950/95 backdrop-blur-md border border-neutral-700 text-white text-xs px-4 py-3 rounded shadow-xl flex items-center justify-between gap-3 animate-in slide-in-from-top-3 fade-in duration-200"
+              className={`pointer-events-auto backdrop-blur-md border text-white text-xs px-4 py-3 rounded shadow-xl flex items-center justify-between gap-3 animate-in slide-in-from-top-3 fade-in duration-200 ${
+                isErrorToast 
+                  ? 'bg-rose-950/95 border-rose-700' 
+                  : 'bg-neutral-950/95 border-neutral-700'
+              }`}
             >
               <div className="flex items-center gap-2.5 min-w-0">
                 {isWishlistToast ? (
                   <span className="text-base shrink-0">❤️</span>
+                ) : isErrorToast ? (
+                  <span className="text-base shrink-0">⚠️</span>
                 ) : (
                   <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
                 )}
                 <span className="font-medium text-neutral-100 truncate">{toast.message}</span>
               </div>
 
-              {isWishlistToast && (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    removeToast(toast.id);
-                    setIsWishlistOpen(true);
-                  }}
-                  className="shrink-0 px-2.5 py-1 bg-rose-600 hover:bg-rose-700 text-white font-bold text-[11px] rounded transition-colors cursor-pointer"
-                >
-                  View
-                </button>
-              )}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  removeToast(toast.id);
+                }}
+                className="text-neutral-400 hover:text-white transition-colors cursor-pointer shrink-0"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
             </div>
           );
         })}

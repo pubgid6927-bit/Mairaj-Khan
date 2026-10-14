@@ -59,7 +59,7 @@ export const StoreSettingsProvider: React.FC<{ children: React.ReactNode }> = ({
 
     if (isSupabaseConfigured()) {
       const res = await saveSiteSettingsInSupabase(updated);
-      return res.success;
+      return res;
     }
     return true;
   };
